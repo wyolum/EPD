@@ -5,6 +5,7 @@ import PIL.Image
 import ImageTk
 import ImageEnhance
 import ImageFilter
+import sys
 
 from Tkinter import *
 import tkFileDialog
@@ -14,13 +15,33 @@ def file_open():
     display_im(out)
 
 def file_save():
-    wif = myEqualize(im, contrast_val, brightness_val)
+    # wif = myEqualize(im, contrast_val, brightness_val)
     wif_fn = tkFileDialog.asksaveasfilename(defaultextension='.WIF',
                                             filetypes=[('WyoLum Image Format', '.WIF')])
     if wif_fn:
         dir, fn = os.path.split(wif_fn)
         towif(wif, os.path.join(dir, fn.upper()))
+
+def mesh_display(fn):
+    import struct
+    import numpy
+    import pylab
+    f = open(fn)
+    h, w = struct.unpack('HH', f.read(4))
+    bpl = w / 8
+    dat = f.read()
+    bytes = numpy.array(map(ord, dat)).reshape((h, bpl))
+
+    bits = numpy.zeros((h, w), bool)
+    for i, line in enumerate(bytes):
+        for j, b in enumerate(line):
+            for k in range(8):
+                bits[i,j * 8 + k] = (b >> k) & 1
     
+    pylab.pcolormesh(bits[::-1], cmap=pylab.cm.binary)
+    pylab.show()
+# mesh_display('AANDJ.WIF')
+
 def towif(im, outfn):
     ''' 
     image should be 264x176 pixels in "1" format
@@ -34,11 +55,13 @@ def towif(im, outfn):
             byte = 0
             for bit_i in range(8):
                 bit = im.getpixel((i + bit_i, j)) < 255
+                # sys.stdout.write(' X'[bit])
                 byte |= bit << bit_i
             f.write(struct.pack('B', byte))
+
     print 'wrote', outfn
 
-def myEqualize(im, contrast=2, brightness=2):
+def myEqualize(im, contrast=1, brightness=1):
     im=im.convert('L')
     contr = ImageEnhance.Contrast(im)
     im = contr.enhance(contrast)
@@ -93,7 +116,7 @@ def wifme_brightness(brightness):
 
 wiftk_id = None
 def image_update():
-    global wiftk, wiftk_id
+    global wiftk, wiftk_id, wif
     wif = myEqualize(im, contrast_val, brightness_val)
     wif= wif.convert('1') # convert image to black and white
     if wiftk_id is not None:
