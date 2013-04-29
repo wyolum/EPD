@@ -15,7 +15,7 @@ def file_open():
 
 def file_save():
     wif = myEqualize(im, contrast_val, brightness_val)
-    wif_fn = tkFileDialog.asksaveasfilename(defaultextension='WIF',
+    wif_fn = tkFileDialog.asksaveasfilename(defaultextension='.WIF',
                                             filetypes=[('WyoLum Image Format', '.WIF')])
     if wif_fn:
         dir, fn = os.path.split(wif_fn)
