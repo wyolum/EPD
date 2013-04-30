@@ -7,6 +7,8 @@ import ImageEnhance
 import ImageFilter
 import sys
 
+im = None ### avoid "NameError: global name 'im' is not defined" error
+
 from Tkinter import *
 import tkFileDialog
 file_opt={}
@@ -81,10 +83,11 @@ SIZES = {'SMALL':(128, 96),
          'LARGE':(264, 176)}
 
 def setWH(w, h):
-    global W, H
+    global W, H, im
     W = w
     H = h
-
+    if im is not None:
+        resize_im()
 setWH(*SIZES['LARGE'])
 
 ### start building GUI
@@ -111,7 +114,9 @@ menubar.add_cascade(label="Size", menu=sizeMenu)
 canvas = Canvas(root, width=SIZES['LARGE'][0], height=SIZES['LARGE'][1] * 2 + 10)
 
 def resize_im():
-    global im
+    global im, imtk
+    im = PIL.Image.open(FILENAME)
+
     im = im.resize((W, H))
     imtk = ImageTk.PhotoImage(im)
     canvas.create_image([W/2, H/2], image=imtk)
@@ -122,15 +127,9 @@ def resize_im():
     
 ## Original
 def display_im(im_filename):
-    global im, imtk
-    im = PIL.Image.open(im_filename)
-    im = im.resize((W, H))
-    imtk = ImageTk.PhotoImage(im)
-    canvas.create_image([W/2, H/2], image=imtk)
-    try:
-        image_update()
-    except:
-        pass
+    global im, imtk, FILENAME
+    FILENAME = im_filename
+    resize_im()
 
 display_im('Brian_Krontz.jpg')
 
