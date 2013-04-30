@@ -40,21 +40,21 @@ def mesh_display(fn):
     
     pylab.pcolormesh(bits[::-1], cmap=pylab.cm.binary)
     pylab.show()
-# mesh_display('AANDJ.WIF')
 
 def towif(im, outfn):
     ''' 
-    image should be 264x176 pixels in "1" format
+    image should be sized already (2.7" display=264x276 pixels) in "1" format
     '''
     f = open(outfn, 'w')
-    w = 264
-    h = 176
-    f.write(struct.pack('HH', h, w))
-    for j in range(h):
-        for i in range(0, w, 8):
+    f.write(struct.pack('HH', H, W))
+    for j in range(H):
+        for i in range(0, W, 8):
             byte = 0
             for bit_i in range(8):
-                bit = im.getpixel((i + bit_i, j)) < 255
+                try:
+                    bit = im.getpixel((i + bit_i, j)) < 255
+                except:
+                    bit = False
                 # sys.stdout.write(' X'[bit])
                 byte |= bit << bit_i
             f.write(struct.pack('B', byte))
@@ -62,7 +62,7 @@ def towif(im, outfn):
     print 'wrote', outfn
 
 def myEqualize(im, contrast=1, brightness=1):
-    im=im.convert('L')
+    im = im.convert('L')
     contr = ImageEnhance.Contrast(im)
     im = contr.enhance(contrast)
     bright = ImageEnhance.Brightness(im)
@@ -70,8 +70,23 @@ def myEqualize(im, contrast=1, brightness=1):
     #im.show()
     return im
 
-def dummy():
-    pass
+def curry(func, *args, **kw):
+    def out():
+        func(*args, **kw)
+    return out
+
+## set canvas size dynamically
+SIZES = {'SMALL':(128, 96),
+         'MEDIUM':(200, 96),
+         'LARGE':(264, 176)}
+
+def setWH(w, h):
+    global W, H
+    W = w
+    H = h
+
+setWH(*SIZES['LARGE'])
+
 ### start building GUI
 root = Tk()
 root.title("WyoLum Image Format")
@@ -85,22 +100,38 @@ fileMenu.add_command(label="Save", command=file_save)
 fileMenu.add_command(label="Exit", command=root.quit)
 menubar.add_cascade(label="File", menu=fileMenu)
 
-### canvas
-W = 264
-H = 176
-canvas = Canvas(root, width=W, height=H * 2 + 10)
+sizeMenu = Menu(menubar)
+sizeMenu.add_command(label="Small", command=curry(setWH, *SIZES['SMALL']))
+sizeMenu.add_command(label="Medium", command=curry(setWH, *SIZES['MEDIUM']))
+sizeMenu.add_command(label="Large", command=curry(setWH, *SIZES['LARGE']))
+menubar.add_cascade(label="Size", menu=sizeMenu)
 
-## Original
-def display_im(im_filename):
-    global im, imtk
-    im = PIL.Image.open(im_filename)
-    im.resize((W, H))
+### canvas
+
+canvas = Canvas(root, width=SIZES['LARGE'][0], height=SIZES['LARGE'][1] * 2 + 10)
+
+def resize_im():
+    global im
+    im = im.resize((W, H))
     imtk = ImageTk.PhotoImage(im)
     canvas.create_image([W/2, H/2], image=imtk)
     try:
         image_update()
     except:
         pass
+    
+## Original
+def display_im(im_filename):
+    global im, imtk
+    im = PIL.Image.open(im_filename)
+    im = im.resize((W, H))
+    imtk = ImageTk.PhotoImage(im)
+    canvas.create_image([W/2, H/2], image=imtk)
+    try:
+        image_update()
+    except:
+        pass
+
 display_im('Brian_Krontz.jpg')
 
 ## WIF
