@@ -891,7 +891,7 @@ const uint32_t EPD_BYTES = (EPD_WIDTH * EPD_HEIGHT / 8);
 
 
 // Add Images library to compiler path
-#include <Images.h>  // this is just an empty file
+//#include <Images.h>  // this is just an empty file
 
 // Arduino IO layout
 const int Pin_TEMPERATURE = A4;

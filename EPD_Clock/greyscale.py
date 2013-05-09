@@ -64,12 +64,13 @@ def towif(im, outfn):
     print 'wrote', outfn
 
 def myEqualize(im, contrast=1, brightness=1):
-    im = im.convert('L')
-    contr = ImageEnhance.Contrast(im)
-    im = contr.enhance(contrast)
-    bright = ImageEnhance.Brightness(im)
-    im = bright.enhance(brightness)
-    #im.show()
+    if im is not None:
+        im = im.convert('L')
+        contr = ImageEnhance.Contrast(im)
+        im = contr.enhance(contrast)
+        bright = ImageEnhance.Brightness(im)
+        im = bright.enhance(brightness)
+        #im.show()
     return im
 
 def curry(func, *args, **kw):
@@ -131,7 +132,7 @@ def display_im(im_filename):
     FILENAME = im_filename
     resize_im()
 
-display_im('Brian_Krontz.jpg')
+# display_im('Brian_Krontz.jpg')
 
 ## WIF
 def wifme_contrast(contrast):
@@ -148,11 +149,12 @@ wiftk_id = None
 def image_update():
     global wiftk, wiftk_id, wif
     wif = myEqualize(im, contrast_val, brightness_val)
-    wif= wif.convert('1') # convert image to black and white
-    if wiftk_id is not None:
-        canvas.delete(wiftk_id)
-    wiftk = ImageTk.PhotoImage(wif)
-    wiftk_id = canvas.create_image([W/2, H + H/2 + 10], image=wiftk)
+    if wif is not None:
+        wif= wif.convert('1') # convert image to black and white
+        if wiftk_id is not None:
+            canvas.delete(wiftk_id)
+        wiftk = ImageTk.PhotoImage(wif)
+        wiftk_id = canvas.create_image([W/2, H + H/2 + 10], image=wiftk)
 
 canvas.pack()
 ## sliders

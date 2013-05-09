@@ -1,5 +1,4 @@
 // -*- mode: c++ -*-
-// Copyright 2013 Pervasive Displays, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +11,7 @@
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 // express or implied.  See the License for the specific language
 // governing permissions and limitations under the License.
+// derived from copyright 2013 Pervasive Displays, Inc.
 
 
 // This program is to illustrate the display operation as described in
@@ -27,6 +27,7 @@
 #include <SD.h>
 #include "EPD.h"
 #include "S5813A.h"
+#include "EPDisplay.h"
 
 #define EPD_LARGE
 
