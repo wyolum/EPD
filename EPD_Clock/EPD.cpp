@@ -38,23 +38,25 @@ static void SPI_put_wait(uint8_t c, int busy_pin);
 static void SPI_send(uint8_t cs_pin, const uint8_t *buffer, uint16_t length);
 
 
-EPD_Class::EPD_Class(EPD_size size,
-		     int panel_on_pin,
-		     int border_pin,
-		     int discharge_pin,
-		     int pwm_pin,
-		     int reset_pin,
-		     int busy_pin,
-		     int chip_select_pin,
-		     SPIClass &SPI_driver) :
-	EPD_Pin_PANEL_ON(panel_on_pin),
-	EPD_Pin_BORDER(border_pin),
-	EPD_Pin_DISCHARGE(discharge_pin),
-	EPD_Pin_PWM(pwm_pin),
-	EPD_Pin_RESET(reset_pin),
-	EPD_Pin_BUSY(busy_pin),
-	EPD_Pin_EPD_CS(chip_select_pin),
-	SPI(SPI_driver) {
+EPD_Class::EPD_Class(){
+}
+
+void EPD_Class::setup(EPD_size size,
+		      int panel_on_pin,
+		      int border_pin,
+		      int discharge_pin,
+		      int pwm_pin,
+		      int reset_pin,
+		      int busy_pin,
+		      int chip_select_pin
+		      ){
+  EPD_Pin_PANEL_ON = panel_on_pin;
+  EPD_Pin_BORDER = border_pin;
+  EPD_Pin_DISCHARGE = discharge_pin;
+  EPD_Pin_PWM = pwm_pin;
+  EPD_Pin_RESET = reset_pin;
+  EPD_Pin_BUSY = busy_pin;
+  EPD_Pin_EPD_CS = chip_select_pin;
 
 	this->size = size;
 	this->stage_time = 480; // milliseconds
