@@ -139,12 +139,16 @@ void loop() {
   
   // sdepd.clear(); // should be libraries job to clear next screen
   if(loop_count % 2){
-    sdepd.display_wif("/IMAGES/CAT_SM.WIF", 130, 100);
-    sdepd.display_wif("/IMAGES/APHRODIT.WIF", 0, 0);
+    // sdepd.display_wif("/IMAGES/CAT_SM.WIF", 130, 100);
+    // sdepd.display_wif("/IMAGES/APHRODIT.WIF", 0, 0);
+    sdepd.display_wif("/IMAGES/AANDJ.WIF", 0, 0);
   }
   else{
-    sdepd.display_wif("/IMAGES/CAT_SM.WIF", 130, 0);
-    sdepd.display_wif("/IMAGES/AANDJ.WIF", -1, -1);
+    // sdepd.display_wif("/IMAGES/CAT_SM.WIF", 130, 0);
+    sdepd.display_wif("/IMAGES/AANDJ.WIF", -264 / 2, -176 / 2);
+    sdepd.display_wif("/IMAGES/AANDJ.WIF", -264 / 2,  176 / 2);
+    sdepd.display_wif("/IMAGES/AANDJ.WIF",  264 / 2, -176 / 2);
+    sdepd.display_wif("/IMAGES/AANDJ.WIF",  264 / 2,  176 / 2);
   }
   sdepd.show();
   loop_count++;
