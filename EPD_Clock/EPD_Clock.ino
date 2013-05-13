@@ -137,18 +137,18 @@ void loop() {
   UNICODE_MSG[8] = 128L * 79L + 9 + 8;
   UNICODE_MSG[9] = 0;
   
+  // sdepd.clear(); // should be libraries job to clear next screen
   if(loop_count % 2){
     sdepd.display_wif("/IMAGES/CAT_SM.WIF", 130, 100);
     sdepd.display_wif("/IMAGES/APHRODIT.WIF", 0, 0);
   }
   else{
     sdepd.display_wif("/IMAGES/CAT_SM.WIF", 130, 0);
-    sdepd.display_wif("/IMAGES/AANDJ.WIF", 130, 100);
+    sdepd.display_wif("/IMAGES/AANDJ.WIF", -1, -1);
   }
   sdepd.show();
-  sdepd.EPD.end();
-  delay(1000);
   loop_count++;
+  sdepd.sleep(1000);
   return;
   sdepd.put_char(16, 0, '0' + loop_count, true);
 
