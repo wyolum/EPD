@@ -1,5 +1,5 @@
-#ifndef SP_EPD_H
-#define SP_EPD_H
+#ifndef EREADER_H
+#define EREADER_H
 #include <inttypes.h>
 #include "EPD.h"
 #include "SD.h"
@@ -16,7 +16,7 @@ const int EPD_EPD_CS = 8;
 const int EPD_FLASH_CS = 9;
 const uint8_t UNIFONT_RECLEN = 33;
 
-class SD_EPD{
+class EReader{
  private:
   bool pingpong;
   // clear screen
@@ -33,7 +33,7 @@ class SD_EPD{
   uint8_t unifont_data[UNIFONT_RECLEN - 1];
 
   // constructor
-  SD_EPD();
+  EReader();
 
   // call in arduino setup function
   void setup(EPD_size size);
@@ -99,7 +99,7 @@ class SD_EPD{
 };
 
 // define the E-Ink display
-extern SD_EPD sdepd;
+extern EReader ereader;
 
 void reader_wrap(void *buffer, uint32_t address, uint16_t length);
 #endif

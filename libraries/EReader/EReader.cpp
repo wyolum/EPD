@@ -1,11 +1,11 @@
-#include "SD_EPD.h"
+#include "EReader.h"
 #include "EPD.h"
 #include "S5813A.h"
 
-SD_EPD::SD_EPD(){
+EReader::EReader(){
 }
 
-void SD_EPD::reader(void *buffer, uint32_t address, uint16_t length){
+void EReader::reader(void *buffer, uint32_t address, uint16_t length){
   byte *my_buffer = (byte *)buffer;
   uint32_t offset = pingpong * epd_bytes;
 
@@ -17,7 +17,7 @@ void SD_EPD::reader(void *buffer, uint32_t address, uint16_t length){
 }
 
 // call in arduino setup function
-void SD_EPD::setup(EPD_size size){
+void EReader::setup(EPD_size size){
   pinMode(10, OUTPUT);
   if (!SD.begin(10)) {
     Serial.println("SD initialization failed!");
@@ -79,7 +79,7 @@ void SD_EPD::setup(EPD_size size){
 }
 
 // clear the display
-void SD_EPD::clear(){
+void EReader::clear(){
   display_file.seek(pingpong * epd_bytes);
   for(uint32_t pos = 0; pos < epd_bytes; pos++){
     display_file.write((byte)0);
@@ -87,7 +87,7 @@ void SD_EPD::clear(){
 }
 
 // display a WIF image at x, y
-bool SD_EPD::display_wif(char *path, int16_t x, int16_t y){
+bool EReader::display_wif(char *path, int16_t x, int16_t y){
   bool out = false;
 
   /*copy image to next screen buffer*/
@@ -139,7 +139,7 @@ bool SD_EPD::display_wif(char *path, int16_t x, int16_t y){
 }
 
 // toggle a pixel at x, y
-void SD_EPD::togglepix(uint16_t x, uint16_t y){
+void EReader::togglepix(uint16_t x, uint16_t y){
   // toggle pixel located at x, y
   bool my_display = !pingpong;
   byte dat;
@@ -160,7 +160,7 @@ void SD_EPD::togglepix(uint16_t x, uint16_t y){
 }
 
 // set a pixel to a value
-void SD_EPD::setpix(uint16_t x, uint16_t y, bool val){
+void EReader::setpix(uint16_t x, uint16_t y, bool val){
   // toggle pixel located at x, y
   bool my_display = !pingpong;
   byte dat;
@@ -181,7 +181,7 @@ void SD_EPD::setpix(uint16_t x, uint16_t y, bool val){
 }
   
 // display a line from start to stop. toggle each pix on line
-void SD_EPD::toggle_line(int16_t startx, int16_t starty, int16_t stopx, int16_t stopy){
+void EReader::toggle_line(int16_t startx, int16_t starty, int16_t stopx, int16_t stopy){
   float dx = (stopx - startx);
   float dy = (stopy - starty);
   int16_t l = sqrt(dx * dx + dy * dy);
@@ -200,7 +200,7 @@ void SD_EPD::toggle_line(int16_t startx, int16_t starty, int16_t stopx, int16_t 
 }
 
 // display a line from start to stop in specified color: true=black, false=white
-void SD_EPD::draw_line(int16_t startx, int16_t starty, int16_t stopx, int16_t stopy, bool color){
+void EReader::draw_line(int16_t startx, int16_t starty, int16_t stopx, int16_t stopy, bool color){
   float dx = (stopx - startx);
   float dy = (stopy - starty);
   int16_t l = sqrt(dx * dx + dy * dy);
@@ -220,7 +220,7 @@ void SD_EPD::draw_line(int16_t startx, int16_t starty, int16_t stopx, int16_t st
   
 // draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
 // toggle each pix on ellipse
-void SD_EPD::toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry){
+void EReader::toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry){
   float step = atan(min(1./rx, 1./ry));
   int16_t x, y, lastx, lasty;
 
@@ -239,7 +239,7 @@ void SD_EPD::toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry){
 
 // draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
 // in specified color: true=black, false=white
-void SD_EPD::draw_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bool color){
+void EReader::draw_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bool color){
   float step = atan(min(1./rx, 1./ry));
   for(float theta = 0; theta < 2 * PI; theta+=step){
     setpix(rx * cos(theta) + cx, ry * sin(theta) + cy, color);
@@ -247,19 +247,19 @@ void SD_EPD::draw_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bo
 }
 
 // display a unifont char at position x, y.  true = black, false = white
-void SD_EPD::draw_char(uint16_t x, uint16_t y, uint16_t unic, bool color){
+void EReader::draw_char(uint16_t x, uint16_t y, uint16_t unic, bool color){
 }
 						
 // display many ascii chars
-void SD_EPD::draw_ascii_string(uint16_t x, uint16_t y, char *ascii, bool color){
+void EReader::draw_ascii_string(uint16_t x, uint16_t y, char *ascii, bool color){
 }
 
 // display many unicode chars
-void SD_EPD::draw_unicode_string(uint16_t x, uint16_t y, uint16_t *unicode, bool color){
+void EReader::draw_unicode_string(uint16_t x, uint16_t y, uint16_t *unicode, bool color){
 }
 
 // display new image.  Call when image is complete
-void SD_EPD::show(){
+void EReader::show(){
   // copy image data to old_image data
   char buffer[epd_width];
 
@@ -271,18 +271,18 @@ void SD_EPD::show(){
   clear();
 }
 
-void SD_EPD::sleep(uint32_t delay_ms){
+void EReader::sleep(uint32_t delay_ms){
   EPD.end();
   delay(delay_ms);
 }
 //***  ensure clock is ok for EPD
-void SD_EPD::set_spi_for_epd() {
+void EReader::set_spi_for_epd() {
   SPI.setBitOrder(MSBFIRST);
   SPI.setDataMode(SPI_MODE0);
   SPI.setClockDivider(SPI_CLOCK_DIV4);
 }
 
-void SD_EPD::SD_image_dims(File imgFile, unsigned short *h, unsigned short *w){
+void EReader::SD_image_dims(File imgFile, unsigned short *h, unsigned short *w){
   imgFile.seek(0);
   *h = (unsigned short)imgFile.read();
   *h += (unsigned short)imgFile.read() << 8;
@@ -290,7 +290,7 @@ void SD_EPD::SD_image_dims(File imgFile, unsigned short *h, unsigned short *w){
   *w += (unsigned short)imgFile.read() << 8;
 }
 
-void SD_EPD::SD_image_reader(File imgFile, void *buffer, uint32_t address, 
+void EReader::SD_image_reader(File imgFile, void *buffer, uint32_t address, 
 		     uint16_t length){
   byte *my_buffer = (byte *)buffer;
   unsigned short my_width;
@@ -323,7 +323,7 @@ void SD_EPD::SD_image_reader(File imgFile, void *buffer, uint32_t address,
   //*** file operations above may have changed SPI mode
 }
 
-void SD_EPD::_erase(){
+void EReader::_erase(){
   int temperature = S5813A.read();
   Serial.print("Temperature = ");
   Serial.print(temperature);
@@ -338,7 +338,7 @@ void SD_EPD::_erase(){
   EPD.frame_cb_repeat(0, reader_wrap, EPD_white);  
 }
 
-void SD_EPD::_draw(){
+void EReader::_draw(){
   //*** maybe need to ensure clock is ok for EPD
   set_spi_for_epd();
 
@@ -347,7 +347,7 @@ void SD_EPD::_draw(){
   // EPD.end();   // power down the EPD panel
 }
 
-uint16_t SD_EPD::put_char(uint16_t x, uint16_t y, uint16_t unic, bool color){
+uint16_t EReader::put_char(uint16_t x, uint16_t y, uint16_t unic, bool color){
   uint32_t pos;
   uint8_t char_width;
   uint8_t out = 16;
@@ -370,7 +370,7 @@ uint16_t SD_EPD::put_char(uint16_t x, uint16_t y, uint16_t unic, bool color){
   return out;
 }
 
-uint8_t SD_EPD::unifont_read_char(File unifont_file, uint32_t i, uint8_t *dest){
+uint8_t EReader::unifont_read_char(File unifont_file, uint32_t i, uint8_t *dest){
   uint8_t n_byte;
   unifont_file.seek(i * UNIFONT_RECLEN);
   n_byte = (uint8_t)unifont_file.read();
@@ -381,7 +381,7 @@ uint8_t SD_EPD::unifont_read_char(File unifont_file, uint32_t i, uint8_t *dest){
   return n_byte;
 }
 
-bool SD_EPD::char_is_blank(uint32_t unic){
+bool EReader::char_is_blank(uint32_t unic){
   bool out = true;
   uint8_t n_byte;
   uint8_t i;
@@ -394,7 +394,7 @@ bool SD_EPD::char_is_blank(uint32_t unic){
   return out;
 }
 
-uint16_t SD_EPD::put_ascii(uint16_t x, uint16_t y, char * ascii, bool color){
+uint16_t EReader::put_ascii(uint16_t x, uint16_t y, char * ascii, bool color){
   char c = 'A';
   for(uint8_t i = 0; ascii[i] > 0; i++){
     x += put_char(x, y, ascii[i], color);
@@ -402,7 +402,7 @@ uint16_t SD_EPD::put_ascii(uint16_t x, uint16_t y, char * ascii, bool color){
   return x;
 }
 
-uint16_t SD_EPD::put_unicode(uint16_t x, uint16_t y, uint16_t *unicode, bool color){
+uint16_t EReader::put_unicode(uint16_t x, uint16_t y, uint16_t *unicode, bool color){
   for(uint8_t i = 0; unicode[i] > 0; i++){
     x += put_char(x, y, unicode[i], color);
   }
@@ -410,7 +410,7 @@ uint16_t SD_EPD::put_unicode(uint16_t x, uint16_t y, uint16_t *unicode, bool col
 }
 
 void reader_wrap(void *buffer, uint32_t address, uint16_t length){
-  sdepd.reader(buffer, address, length);
+  ereader.reader(buffer, address, length);
 }
 
-SD_EPD sdepd;
+EReader ereader;
