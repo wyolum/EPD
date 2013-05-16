@@ -1,3 +1,17 @@
+// Copyright 2013 WyoLum, LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+// express or implied.  See the License for the specific language
+// governing permissions and limitations under the License.
+
 #include <inttypes.h>
 #include <ctype.h>
 
@@ -12,6 +26,8 @@ uint16_t UNICODE_MSG[10];
 // I/O setup
 void setup() {
   Serial.begin(115200);
+  Serial.println("WyoLum, LLC 2013");
+  Serial.println("Buy Open Source!!");
   ereader.setup(EPD_2_7);
 
   UNICODE_MSG[0] = (uint16_t)'U';
@@ -56,6 +72,6 @@ void loop() {
   }
   loop_count++;
   ereader.show();
-  ereader.sleep(1000);
+  ereader.sleep(1000); // allows EPD to power off gracefully
 }
 
