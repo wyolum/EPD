@@ -21,7 +21,7 @@
 #include "S5813A.h"
 #include "EReader.h"
 
-uint16_t UNICODE_MSG[10];
+uint16_t UNICODE_MSG[11] = {25105, 20497, 24859, 31278, 23376, 24037, 20316, 23460, 65281, 0};
 
 // I/O setup
 void setup() {
@@ -29,17 +29,6 @@ void setup() {
   Serial.println("WyoLum, LLC 2013");
   Serial.println("Buy Open Source!!");
   ereader.setup(EPD_2_7);
-
-  UNICODE_MSG[0] = (uint16_t)'U';
-  UNICODE_MSG[1] = (uint16_t)'N';
-  UNICODE_MSG[2] = (uint16_t)'I';
-  UNICODE_MSG[3] = (uint16_t)'F';
-  UNICODE_MSG[4] = (uint16_t)'O';
-  UNICODE_MSG[5] = (uint16_t)'N';
-  UNICODE_MSG[6] = (uint16_t)'T';
-  UNICODE_MSG[7] = (uint16_t)' ';
-  UNICODE_MSG[8] = 128L * 79L + 9 + 8;
-  UNICODE_MSG[9] = 0;
 }
 
 
@@ -52,6 +41,7 @@ void loop() {
   }
   else if(loop_count % 4 == 1){
     ereader.display_wif("/IMAGES/WYOLUM.WIF", 0, 0);
+    ereader.put_unicode(30, 40, UNICODE_MSG, true);
   }
   else if(loop_count % 4 == 2){
     ereader.display_wif("/IMAGES/LENA.WIF", -264/2, 0);
