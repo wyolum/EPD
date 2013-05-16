@@ -246,18 +246,6 @@ void EReader::draw_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, b
   }
 }
 
-// display a unifont char at position x, y.  true = black, false = white
-void EReader::draw_char(uint16_t x, uint16_t y, uint16_t unic, bool color){
-}
-						
-// display many ascii chars
-void EReader::draw_ascii_string(uint16_t x, uint16_t y, char *ascii, bool color){
-}
-
-// display many unicode chars
-void EReader::draw_unicode_string(uint16_t x, uint16_t y, uint16_t *unicode, bool color){
-}
-
 // display new image.  Call when image is complete
 void EReader::show(){
   // copy image data to old_image data

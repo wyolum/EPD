@@ -67,15 +67,6 @@ class EReader{
   // in specified color: true=black, false=white
   void draw_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bool color);
 
-  // display a unifont char at position x, y.  true = black, false = white
-  void draw_char(uint16_t x, uint16_t y, uint16_t unic, bool color);
-						
-  // display many ascii chars
-  void draw_ascii_string(uint16_t x, uint16_t y, char *ascii, bool color);
-
-  // display many unicode chars
-  void draw_unicode_string(uint16_t x, uint16_t y, uint16_t *unicode, bool color);
-
   // display new image.  Call when image is complete
   void show();
 

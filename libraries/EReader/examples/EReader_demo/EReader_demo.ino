@@ -7,8 +7,6 @@
 #include "S5813A.h"
 #include "EReader.h"
 
-#define EPD_LARGE
-
 uint16_t UNICODE_MSG[10];
 
 // I/O setup
@@ -33,8 +31,6 @@ void setup() {
 unsigned long int loop_count = 0;
 
 void loop() {
-  
-  // ereader.clear(); // should be libraries job to clear next screen
   if(loop_count % 4 == 0){
     ereader.display_wif("/IMAGES/AANDJ.WIF", 0, 0);
   }
@@ -46,13 +42,10 @@ void loop() {
     ereader.display_wif("/IMAGES/LENA.WIF", 264/2, 0);
   }
   else{
-    // ereader.display_wif("/IMAGES/CAT_SM.WIF", 130, 0);
     ereader.display_wif("/IMAGES/AANDJ.WIF", -264 / 2,  176 / 2);
     ereader.display_wif("/IMAGES/AANDJ.WIF",  264 / 2, -176 / 2);
     ereader.display_wif("/IMAGES/CAT_SM.WIF", 264 / 2, 176 / 2);
     ereader.display_wif("/IMAGES/APHRODIT.WIF", 0, 0);
-    // ereader.draw_line(random(0, 264), random(0, 1764), random(0, 264), random(0, 176), true);
-    // ereader.draw_ellipse(random(0, 264), random(0, 176), 10, 10, true);
     ereader.toggle_ellipse(random(0, 264), random(0, 176), 20, 20);
     ereader.put_ascii(random(0, 200), random(16, 150), "WyoLum ROCKS!!", true);
     ereader.setpix(128, 0, true);
@@ -61,7 +54,6 @@ void loop() {
     ereader.put_unicode(10, 140, UNICODE_MSG, true);
     ereader.toggle_line(70, 0, 120, 50);
   }
-
   loop_count++;
   ereader.show();
   ereader.sleep(1000);
