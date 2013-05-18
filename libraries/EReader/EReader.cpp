@@ -336,16 +336,26 @@ void EReader::_erase(){
 
   EPD.begin(); // power up the EPD panel
   EPD.setFactor(temperature); // adjust for current temperature
+#ifdef SLOW
   EPD.frame_cb_repeat(0, reader_wrap, EPD_compensate);
   EPD.frame_cb_repeat(0, reader_wrap, EPD_white);  
+#else
+  EPD.frame_cb(0, reader_wrap, EPD_compensate);
+  EPD.frame_cb(0, reader_wrap, EPD_white);  
+#endif
 }
 
 void EReader::_draw(){
   //*** maybe need to ensure clock is ok for EPD
   set_spi_for_epd();
 
+#ifdef SLOW
   EPD.frame_cb_repeat(0, reader_wrap, EPD_inverse);
   EPD.frame_cb_repeat(0, reader_wrap, EPD_normal);
+#else
+  EPD.frame_cb(0, reader_wrap, EPD_inverse);
+  EPD.frame_cb(0, reader_wrap, EPD_normal);
+#endif
   // EPD.end();   // power down the EPD panel
 }
 
