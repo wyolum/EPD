@@ -27,7 +27,6 @@ void EReader::reader(void *buffer, uint32_t address, uint16_t length){
   for(uint16_t i=0; i < length; i++){
     my_buffer[i] = display_file.read();
   }
-  Serial.println();
 }
 
 // call in arduino setup function
@@ -82,14 +81,14 @@ void EReader::setup(EPD_size size){
   }    
   unifont_file = SD.open("unifont.wff");
 
+
   // configure temperature sensor
   S5813A.begin(EPD_TEMPERATURE);
-  _erase();
+  // _erase();
   pingpong = false;
   clear();
   pingpong = true;
   clear();
-
 }
 
 // clear the display
@@ -146,7 +145,6 @@ bool EReader::display_wif(char *path, int16_t x, int16_t y){
 	display_file.write(buff[j - x / 8]);
       }
     }
-    Serial.println();
   }
   imgFile.close();
   return out;
@@ -232,6 +230,29 @@ void EReader::draw_line(int16_t startx, int16_t starty, int16_t stopx, int16_t s
   }
 }
   
+// draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
+// toggle each pix on ellipse
+void EReader::toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bool fill){
+  float x, y;
+  int xint, yint;
+  uint8_t xbit;
+  
+  if(fill){
+    for(y = cy - ry; y <= cy + ry; y++){
+      x = cx - sqrt(rx * rx * (1 - y * y / (ry * ry)));
+      xint = (int)round(x);
+      xbit = xint % 8;
+      
+      for(uint8_t b=xbit; b < 8; b++){
+      }
+	
+    }
+  }
+  else{
+    toggle_ellipse(cx, cy, rx, ry);
+  }
+}
+
 // draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
 // toggle each pix on ellipse
 void EReader::toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry){
@@ -325,18 +346,20 @@ void EReader::SD_image_reader(File imgFile, void *buffer, uint32_t address,
   //*** file operations above may have changed SPI mode
 }
 
+// #define SLOW
+
 void EReader::_erase(){
   int temperature = S5813A.read();
-  Serial.print("Temperature = ");
-  Serial.print(temperature);
-  Serial.println(" Celcius");
+  // Serial.print("Temperature = ");
+  // Serial.print(temperature);
+  // Serial.println(" Celcius");
 
   //*** maybe need to ensure clock is ok for EPD
   set_spi_for_epd();
 
   EPD.begin(); // power up the EPD panel
-  EPD.setFactor(temperature); // adjust for current temperature
 #ifdef SLOW
+  EPD.setFactor(temperature); // adjust for current temperature
   EPD.frame_cb_repeat(0, reader_wrap, EPD_compensate);
   EPD.frame_cb_repeat(0, reader_wrap, EPD_white);  
 #else

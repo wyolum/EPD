@@ -20,8 +20,10 @@
 
 // Arduino IO layout
 const int EPD_TEMPERATURE = A4;
-const int EPD_PANEL_ON = 2;
-const int EPD_BORDER = 3;
+// const int EPD_PANEL_ON = 2; // ORIG
+// const int EPD_BORDER = 3;  // ORIG
+const int EPD_PANEL_ON = A0; // TEST
+const int EPD_BORDER = A1; // TEST
 const int EPD_DISCHARGE = 4;
 const int EPD_PWM = 5;
 const int EPD_RESET = 6;
@@ -76,6 +78,7 @@ class EReader{
   // draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
   // toggle each pix on ellipse
   void toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry);
+  void toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bool fill);
 
   // draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
   // in specified color: true=black, false=white
