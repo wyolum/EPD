@@ -27,6 +27,9 @@ uint16_t UNICODE_MSG[11] = {25105, 20204, 29233, 30717, 36882, 31185, 25216, 0};
 const char* DEFAULT_WIF = "DEFAULT.WIF";
 const char* ROOT_DIR = "ALBUM/";
 char path[20];
+const uint8_t CMD_BUF_LEN = 10;
+const uint8_t cmd_pending = 0;
+char cmd_buffer[CMD_BUF_LEN];
 
 int current_wif = 0;
 int current_dir = -1;
@@ -46,6 +49,10 @@ void next_wif(){
   current_wif++;
   current_wif %= n_wif;
 }
+
+/*
+  decrement image number by one
+ */
 void prev_wif(){
   current_wif--;
   if(current_wif < 0){
@@ -53,8 +60,34 @@ void prev_wif(){
   }
 }
 
+void open_cwd(){
+  get_cwd_path(); // copy current dir path to path
+  cwd.close();
+  cwd = SD.open(path);
+  n_wif = count_wifs(cwd);
+}
+
+void next_dir(){
+  current_dir++;
+  current_dir %= n_dir;
+  open_cwd();
+  if(current_wif > n_wif - 1){
+    current_wif = 0;
+  }
+}
+void prev_dir(){
+  current_dir--;
+  if(current_dir < 0){
+    current_dir = n_dir - 1;
+  }
+  open_cwd();
+  if(current_wif > n_wif - 1){
+    current_wif = 0;
+  }
+}
+
 /*
-  return path for current working directory cwd
+  store current working directory int path
  */
 char *get_cwd_path(){
   int n = strlen(ROOT_DIR);
@@ -70,7 +103,7 @@ char *get_cwd_path(){
 }
 
 /*
-  return the path to the current wif file
+  store current wif file into path
  */
 void *get_wif_path(){
   get_cwd_path();
@@ -90,27 +123,6 @@ void *get_wif_path(){
   }
 }
 
-
-void open_cwd(){
-  get_cwd_path(); // copy current dir path to path
-  cwd.close();
-  cwd = SD.open(path);
-  n_wif = count_wifs(cwd);
-}
-void next_dir(){
-  current_dir++;
-  current_dir %= n_dir;
-  current_wif = 0;
-  open_cwd();
-}
-void prev_dir(){
-  current_dir--;
-  if(current_dir < 0){
-    current_dir = n_dir - 1;
-  }
-  current_wif = 0;
-  open_cwd();
-}
 bool isWIF(File f){
   char *name = f.name();
   bool out = false;
@@ -132,7 +144,7 @@ int count_wifs(File dir){
   if(dir.isDirectory()){
     dir.rewindDirectory();
     while(f = dir.openNextFile()){
-      Serial.println(f.name());
+      // Serial.println(f.name());
       if(isWIF(f)){
 	out++;
       }
@@ -143,18 +155,27 @@ int count_wifs(File dir){
 }
 
 // I/O setup
+const int UP_PIN = 17;
+const int DOWN_PIN = 15;
+const int SEL_PIN = 16;
+const int MODE_PIN = A6;
+
 void setup() {
   int n = strlen(ROOT_DIR);
   bool done = false;
 
   Serial.begin(115200);
-  // Serial.println("WyoLum, LLC 2013");
-  // Serial.println("Buy Open Source Hardware!");
+  Serial.println("WyoLum, LLC 2013");
+  Serial.println("Buy Open Source Hardware!");
   ereader.setup(EPD_2_7); // starts SD
-  Serial.println("Made it here");
+  pinMode(UP_PIN, INPUT);
+  pinMode(DOWN_PIN, INPUT);
+  pinMode(SEL_PIN, INPUT);
+  pinMode(MODE_PIN, INPUT);
   root = SD.open(ROOT_DIR);
   if(!root){
-    Serial.print("Root not found");
+    Serial.print("Root not found:\n    ");
+    Serial.println(ROOT_DIR);
     while(1) delay(100);
   }
   get_cwd_path();
@@ -164,8 +185,6 @@ void setup() {
 
   for(n_dir=0; !done; n_dir++){
     path[n] = 'A' + n_dir;
-    Serial.print("setup for(;;) path:");
-    Serial.println(path);
     if(SD.exists(path)){
     }
     else{
@@ -184,58 +203,58 @@ void interact(){
   char c;
   update = false;
   if(Serial.available()){
-    c = Serial.read();
-    if(c == 'n'){
-      next_wif();
-      display();
+    while(Serial.available()){
+      c = Serial.read();
+      if(c == 'n'){
+	next_wif();
+	update = true;
+      }
+      if(c == 'N'){
+	next_dir();
+	update = true;
+      }
+      if(c == 'p'){
+	prev_wif();
+	update = true;
+      }
+      if(c == 'P'){
+	prev_dir();
+	update = true;
+      }
     }
-    if(c == 'N'){
-      next_dir();
-      display();
-    }
-    if(c == 'p'){
-      prev_wif();
-      display();
-    }
-    if(c == 'P'){
-      prev_dir();
-      display();
-    }
+    display();
   }
 }
 
 void display(){
-  Serial.println("display() start");
-  erase_img(wif);
-  get_wif_path();
-  wif = SD.open(path);
-  draw_img(wif);
-  Serial.println("display() done");
+  erase_img(wif); // wif is still the old file
+  wif.close();    // keep close and open calls in the same spot
+  get_wif_path(); // store new wif name in path
+  wif = SD.open(path); 
+  draw_img(wif); // draw new wif
 }
 
-/*
-void display(){
-  get_wif_path();
-  Serial.print("n_dir:");
-  Serial.print(n_dir);
-  Serial.print(", current_dir:");
-  Serial.print(current_dir);
-  Serial.print(", n_wif:");
-  Serial.print(n_wif);
-  Serial.print(", current_wif:");
-  Serial.print(current_wif);
-  Serial.print(", loop path:");
-  Serial.println(path);
-  ereader.display_wif(path, 0, 0);
-  ereader.show();
-  ereader.sleep(1);
-  Serial.println("display() done");
-}
-*/
 // main loop
 unsigned long int loop_count = 0;
 void loop() {
   interact();
+  if(analogRead(MODE_PIN) > 512){
+    prev_wif();
+    display();
+  }
+  if(digitalRead(SEL_PIN)){
+    next_wif();
+    display();
+  }
+  if(digitalRead(UP_PIN)){
+    prev_dir();
+    display();
+  }
+  if(digitalRead(DOWN_PIN)){
+    next_dir();
+    display();
+  }
+  delay(10);
 }
 
 void draw_img(File imgFile){
@@ -267,7 +286,6 @@ void erase_img(File imgFile){
   ereader.EPD.frame_cb(0, SD_reader, EPD_compensate);
   reset_wif();
   ereader.EPD.frame_cb(0, SD_reader, EPD_white);
-  wif.close();
 }
 
 void reset_wif(){

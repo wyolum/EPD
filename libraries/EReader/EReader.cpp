@@ -31,9 +31,12 @@ void EReader::reader(void *buffer, uint32_t address, uint16_t length){
 
 // call in arduino setup function
 void EReader::setup(EPD_size size){
-  pinMode(10, OUTPUT);
-  if (!SD.begin(10)) {
-    Serial.println("SD initialization failed!");
+  pinMode(SD_CS, OUTPUT);
+  if (!SD.begin(SD_CS)) {
+    Serial.println("SD initialization failed!!");
+    Serial.print("SD_CS");
+    Serial.println(SD_CS, DEC);
+    
     while(1); delay(100);
   }
 

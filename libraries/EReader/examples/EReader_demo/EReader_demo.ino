@@ -28,6 +28,9 @@ void setup() {
   Serial.begin(115200);
   Serial.println("WyoLum, LLC 2013");
   Serial.println("Buy Open Source!!");
+  Serial.print("SD Chip Select PIN: ");
+  Serial.println(SD_CS, DEC);
+  
   ereader.setup(EPD_2_7);
 }
 

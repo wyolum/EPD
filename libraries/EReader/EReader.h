@@ -19,11 +19,11 @@
 #include "SD.h"
 
 // Arduino IO layout
-const int EPD_TEMPERATURE = A4;
-// const int EPD_PANEL_ON = 2; // ORIG
-// const int EPD_BORDER = 3;  // ORIG
-const int EPD_PANEL_ON = A0; // TEST
-const int EPD_BORDER = A1; // TEST
+const int EPD_TEMPERATURE = 18; // A4
+const int EPD_PANEL_ON = 2; // ORIG
+const int EPD_BORDER = 3;  // ORIG
+// const int EPD_PANEL_ON = A0; // TEST
+// const int EPD_BORDER = A1; // TEST
 const int EPD_DISCHARGE = 4;
 const int EPD_PWM = 5;
 const int EPD_RESET = 6;
@@ -31,6 +31,7 @@ const int EPD_BUSY = 7;
 const int EPD_EPD_CS = 8;
 const int EPD_FLASH_CS = 9;
 const uint8_t UNIFONT_RECLEN = 33;
+const int SD_CS = 9;
 
 class EReader{
  private:
