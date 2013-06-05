@@ -46,7 +46,7 @@ unsigned short my_width;
 unsigned short my_height;
 // these are involved in determining when we go to sleep
 long lastWakeTime; //reset with every interaction
-#define AWAKETIME 2000 // how long to stay awake
+#define AWAKETIME 30000 // how long to stay awake
 
 /*
   increment image number by one
