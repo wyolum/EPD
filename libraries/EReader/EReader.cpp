@@ -451,4 +451,8 @@ void reader_wrap(void *buffer, uint32_t address, uint16_t length){
   ereader.reader(buffer, address, length);
 }
 
+float getTemp(){
+  return (digitalRead(EPD_TEMPERATURE) - MCP9700_C0) / MCP9700_GAIN;
+}
+
 EReader ereader;

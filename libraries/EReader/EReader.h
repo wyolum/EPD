@@ -19,11 +19,11 @@
 #include "SD.h"
 
 // Arduino IO layout
-const int EPD_TEMPERATURE = 18; // A4
-const int EPD_PANEL_ON = 2; // ORIG
-const int EPD_BORDER = 3;  // ORIG
-// const int EPD_PANEL_ON = A0; // TEST
-// const int EPD_BORDER = A1; // TEST
+const int EPD_TEMPERATURE = A0; // A4
+const int EPD_PANEL_ON = 2; // ORIG V2 or lower
+const int EPD_BORDER = 3;  // ORIG V2 or lower
+// const int EPD_PANEL_ON = A0; // V3 or higher
+// const int EPD_BORDER = A1; // V3 of higher
 const int EPD_DISCHARGE = 4;
 const int EPD_PWM = 5;
 const int EPD_RESET = 6;
@@ -32,6 +32,12 @@ const int EPD_EPD_CS = 8;
 const int EPD_FLASH_CS = 9;
 const uint8_t UNIFONT_RECLEN = 33;
 const int SD_CS = 9;
+
+const float MCP9700_C0 = 155.15151515;   // 500 mV measured with 3v3 reference at 0 DEG C with 10 bits
+const float MCP9700_GAIN = 3.103030303; // 10 mV / DEG C measured with 3v3 ref
+// C = C0 + GAIN * Temp
+// Temp = (C - C0) / GAIN
+float getTemp();
 
 class EReader{
  private:

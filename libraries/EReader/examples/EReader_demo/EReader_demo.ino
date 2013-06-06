@@ -30,6 +30,10 @@ void setup() {
   Serial.println("Buy Open Source!!");
   Serial.print("SD Chip Select PIN: ");
   Serial.println(SD_CS, DEC);
+  Serial.print("Temp count ");
+  Serial.println(digitalRead(EPD_TEMPERATURE), DEC);
+  Serial.print("Temp ");
+  Serial.println(getTemp(), DEC);
   
   ereader.setup(EPD_2_7);
 }
