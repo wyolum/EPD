@@ -12,17 +12,19 @@ QR_SIZE = 150
 PAGE = 264, 176
 WIDTH = PAGE[0]
 HEIGHT = PAGE[1]
-FONT_NAME = 'Ubuntu'
+FONT_NAME = 'Orbitron' # 'Ovo' # 'Ubuntu'
 FONT_STYLE = 'Regular'
 FONT_DIR = '/home/justin/Dropbox/WyoLumCode/fonts/'
+NAME_FONT_SIZE = 35
+NORMAL_FONT_SIZE = 20
+
+
 HEADSHOT_DIR = 'headshots/'
 SCHEDULE_DIR = 'schedule/'
 LOGO_DIR = 'logos/'
 OUTPUT_DIR = 'ALBUM/'
 CUSTOM_DIR = 'custom/'
 
-NAME_FONT_SIZE = 30
-NORMAL_FONT_SIZE = 25
 HEADSHOT_WIDTH = 150
 WHITE = 255
 BLACK = 0
@@ -54,7 +56,7 @@ class Attendee:
         return '\n'.join([self.name, self.email, self.phone, self.website])
     
     def getRoles(self):
-        out = ['Partipant']
+        out = ['Participant']
         if self.speaker[0].lower() == 'y':
             out.append('Speaker')
         if self.sponsor[0].lower() == 'y':
@@ -82,9 +84,16 @@ class WIF:
                 color=BLACK,
                 valign='top',
                 halign='left'):
-        ttf = '%s%s-%s.ttf' % (FONT_DIR, font, font_style)
+        if font_style:
+            ttf = '%s%s-%s.ttf' % (FONT_DIR, font, font_style)
+        else:
+            ttf = '%s%s.ttf' % (FONT_DIR, font)
         font = ImageFont.truetype(ttf, font_size)
         text_size = self.draw.textsize(txt, font)
+        if text_size[0] > WIDTH:
+            txt = txt.split()
+            txt = txt[0] + ' ' + txt[-1][0] + '.'
+            text_size = self.draw.textsize(txt, font)
         if valign == 'top':
             pass
         elif valign == 'center':
@@ -151,7 +160,11 @@ FILENAME = 'attendees.csv'
 people = list(csv.reader(open(FILENAME)))
 header = people[0]
 people = people[1:]
-for person in people:
+
+shutil.rmtree(CUSTOM_DIR)
+os.mkdir(CUSTOM_DIR)
+
+for person in people[1:2]:
     person = Attendee(person, header)
     pages = [WIF() for i in range(N_PAGE)]
     
@@ -161,8 +174,8 @@ for person in people:
     pages[2].addImage(Image.open(LOGO_DIR + person.logo), 0, 0)
     for page in pages:
         for i, role in enumerate(person.roles):
-            page.addText(role, 0, 10 + i * NORMAL_FONT_SIZE)
-        page.addText(person.name, WIDTH/2, HEIGHT - NAME_FONT_SIZE, font_size=NAME_FONT_SIZE, halign='center')
+            page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
+        page.addText(person.name, WIDTH/2, HEIGHT, font_size=NAME_FONT_SIZE, halign='center', valign='bottom')
     
 
     dir = CUSTOM_DIR + '%04d-%s/ALBUM/' % (int(person.id), '_'.join(person.name.split()))
@@ -175,9 +188,10 @@ for person in people:
 
     dir = dir + 'A/'
     if os.path.exists(dir):
-        rmdir(dir)
+        os.rmdir(dir)
     os.mkdir(dir)
     for i, page in enumerate(pages):
         page.addBreadCrumb(0, 0, 0, i)
         page.saveas(dir + chr(ord('A') + i) + '.WIF')
-pages[-1].show()
+        page.show()
+    here
