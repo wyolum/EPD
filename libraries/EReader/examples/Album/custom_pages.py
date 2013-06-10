@@ -1,3 +1,4 @@
+import unifont
 import shutil
 import os.path
 import glob
@@ -67,6 +68,7 @@ class Attendee:
         return qrcode.make(str(self))
 
 class WIF:
+    wff_file = open('unifont.wff')
     def __init__(self, size=PAGE, background=None):
         self.size = size
         self.im = Image.new('1', size, WHITE)
@@ -77,6 +79,10 @@ class WIF:
     def addImage(self, img, x, y):
         box = (x, y, x + img.size[0], y + img.size[1])
         self.im.paste(img, box)
+
+    def addUnifont(self, txt, x, y):
+        unifont.addText(txt, self.wff_file, self.im, x, y)
+        
     def addText(self, txt, x, y, 
                 font_size=NORMAL_FONT_SIZE, 
                 font=FONT_NAME, 
@@ -174,9 +180,10 @@ for person in people:
     pages[2].addImage(Image.open(LOGO_DIR + person.logo), 0, 0)
     for page in pages:
         for i, role in enumerate(person.roles):
-            page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
+            # page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
+            page.addUnifont(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
         page.addText(person.name, WIDTH/2, HEIGHT, font_size=NAME_FONT_SIZE, halign='center', valign='bottom')
-    
+    pages[0].show()
 
     dir = CUSTOM_DIR + '%04d-%s/ALBUM/' % (int(person.id), '_'.join(person.name.split()))
     copy_dir(OUTPUT_DIR + 'B/', dir + 'B/')

@@ -86,10 +86,10 @@ def create_index(filename='unifont.index'):
         n += len(l)
         last = dec
 
-def check_index(f, index_filename='unifont.index'):
+def check_index(f, wff_filename='unifont.index'):
     w = 12
     HEX_FILE.seek(0)
-    index = open(index_filename).readlines()
+    index = open(wff_filename).readlines()
     
     for i, l in enumerate(index):
         unic, offset = l.split(':')
@@ -121,43 +121,40 @@ def create_wff(out_filename='unifont.wff'):
     print 'created', out_filename
 # create_wff() ##only need to call once
 
-def wff_to_hex(index_file, idx):
+def wff_to_hex(wff_file, idx):
     '''
     convert a wff char back into hex format
     '''
-    index_file.seek(idx * REC_LEN)
-    dat = index_file.read(REC_LEN)
+    wff_file.seek(idx * REC_LEN)
+    dat = wff_file.read(REC_LEN)
     n_byte = ord(dat[0])
     data = [ord(b) for b in dat[1:]]
     s = ''.join(['%02x' % d for d in data])
     return '%04x:%s' % (idx, s)
 
-def to_array(index_file, idx):
+def to_array(wff_file, idx):
     '''
     read charcter at given index into an array
     '''
-    index_file.seek(idx * REC_LEN)
-    dat = index_file.read(REC_LEN)
+    wff_file.seek(idx * REC_LEN)
+    dat = wff_file.read(REC_LEN)
     n_byte = ord(dat[0])
     # width = 8 * (n_byte / 16) ### not used
     dat = dat[1:1 + n_byte]
     data = array([_bits(ord(b)) for b in dat])
     return reshape(data, (16, -1))
 
-def paste_char(index_file, img, unic, x, y):
+def paste_char(wff_file, img, unic, x, y):
     '''
     paste a bitmap of char at unic indix at pos x, y into img
     '''
-    # dat = wff_to_hex(index_file, unic)
-    # unpack(dat)
-    dat = to_array(index_file, unic)
-    # print dat
-    rgba = zeros((dat.shape[0], dat.shape[1], 4), 'uint8') 
-    rgba += (1 - dat[:,:,newaxis]) * 255
-    # im = Im.fromarray(rgba) ## was
-    im = Im.fromarray(rgba[:,:,0])
+    dat = to_array(wff_file, unic)
+    ones = zeros((dat.shape[0], dat.shape[1]), 'uint8')
+    ones += (1 - dat) * 255
+    im = Im.fromarray(ones)
     img.paste(im, (x, y))
-    
+    return dat.shape[1]
+
 def check_wff(wff_filename='unifont.wff'):
     wff_file = open(wff_filename)
     # bigIm = Im.new('RGBA', (260 * 16, 260 * 16), (255, 255, 255, 255)) ## was
@@ -179,6 +176,15 @@ def check_wff(wff_filename='unifont.wff'):
     # bigIm.show()
     bigIm.save('unifont.jpg')
     print 'wrote unifont.jpg'
-check_wff()
+# check_wff() ## only call once
 
+def addText(text, wff_file, im, x, y):
+    for unic in text:
+        x += paste_char(wff_file, im, ord(unic), x, y)
 
+def addText__test__():
+    wff_file = open('unifont.wff')
+    im = Im.new('1', (264, 175), 255)
+    addText('JUSTIN', wff_file, im, 0, 0)
+    im.show()
+# addText__test__()
