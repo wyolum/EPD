@@ -164,7 +164,7 @@ people = people[1:]
 shutil.rmtree(CUSTOM_DIR)
 os.mkdir(CUSTOM_DIR)
 
-for person in people[1:2]:
+for person in people:
     person = Attendee(person, header)
     pages = [WIF() for i in range(N_PAGE)]
     
@@ -193,5 +193,4 @@ for person in people[1:2]:
     for i, page in enumerate(pages):
         page.addBreadCrumb(0, 0, 0, i)
         page.saveas(dir + chr(ord('A') + i) + '.WIF')
-        page.show()
-    here
+        # page.show()
