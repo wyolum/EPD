@@ -178,13 +178,23 @@ def check_wff(wff_filename='unifont.wff'):
     print 'wrote unifont.jpg'
 # check_wff() ## only call once
 
-def addText(text, wff_file, im, x, y):
-    for unic in text:
-        x += paste_char(wff_file, im, ord(unic), x, y)
+def addText(text, wff_file, im, x, y, bigascii=False):
+    '''
+    paste an image of text into im at position x, y.
+    if bigascii == True, then use large chars near end of UNIFONT file
+    '''
+    if bigascii:
+        utxt = ''.join([unichr(ord(c) + 0xfee0) for c in text])
+        addText(utxt, wff_file, im, x, y, bigascii=False)
+    else:
+        for unic in text:
+            x += paste_char(wff_file, im, ord(unic), x, y)
 
 def addText__test__():
     wff_file = open('unifont.wff')
     im = Im.new('1', (264, 175), 255)
     addText('JUSTIN', wff_file, im, 0, 0)
+    txt = 'Justin'
+    addText(txt, wff_file, im, 0, 20, bigascii=True)
     im.show()
 # addText__test__()

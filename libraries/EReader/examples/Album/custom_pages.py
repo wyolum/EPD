@@ -80,8 +80,8 @@ class WIF:
         box = (x, y, x + img.size[0], y + img.size[1])
         self.im.paste(img, box)
 
-    def addUnifont(self, txt, x, y):
-        unifont.addText(txt, self.wff_file, self.im, x, y)
+    def addUnifont(self, txt, x, y, **kw):
+        unifont.addText(txt, self.wff_file, self.im, x, y, **kw)
         
     def addText(self, txt, x, y, 
                 font_size=NORMAL_FONT_SIZE, 
@@ -170,7 +170,7 @@ people = people[1:]
 shutil.rmtree(CUSTOM_DIR)
 os.mkdir(CUSTOM_DIR)
 
-for person in people:
+for person in people[2:3]:
     person = Attendee(person, header)
     pages = [WIF() for i in range(N_PAGE)]
     
@@ -181,7 +181,7 @@ for person in people:
     for page in pages:
         for i, role in enumerate(person.roles):
             # page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
-            page.addUnifont(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
+            page.addUnifont(role, 0, 10 + i * 16 + 5, bigascii=False)
         page.addText(person.name, WIDTH/2, HEIGHT, font_size=NAME_FONT_SIZE, halign='center', valign='bottom')
     pages[0].show()
 
