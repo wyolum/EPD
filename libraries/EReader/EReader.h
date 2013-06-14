@@ -31,8 +31,8 @@ const int EPD_BUSY = 7;
 const int EPD_EPD_CS = 8;
 const int EPD_FLASH_CS = 9;
 const uint8_t UNIFONT_RECLEN = 33;
-const int SD_CS = 10; // delete me!
-// const int SD_CS = 9; // production
+// const int SD_CS = 10; // delete me!
+const int SD_CS = 9; // production
 
 const float MCP9700_C0 = 155.15151515;   // 500 mV measured with 3v3 reference at 0 DEG C with 10 bits
 const float MCP9700_GAIN = 3.103030303; // 10 mV / DEG C measured with 3v3 ref

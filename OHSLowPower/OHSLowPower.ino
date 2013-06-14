@@ -247,7 +247,8 @@ void loop() {
 }
 
 void goToSleep(){
-
+  ereader.EPD.end();   // make sure EPD panel is off
+  
   set_sleep_mode(SLEEP_MODE_PWR_SAVE);
   sleep_enable();
 

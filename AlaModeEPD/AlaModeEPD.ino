@@ -966,9 +966,9 @@ void setup() {
   // Note that even if it's not used as the CS pin, the hardware SS pin
   // (10 on most Arduino boards, 53 on the Mega) must be left as an output
   // or the SD library functions will not work.
-   pinMode(10, OUTPUT);
+   pinMode(9, OUTPUT);
 
-  if (!SD.begin(10)) {
+  if (!SD.begin(9)) {
     Serial.println("initialization failed!");
     return;
   }
@@ -1088,8 +1088,10 @@ void draw_img(File imgFile){
 unsigned long int loop_count = 0;
 unsigned long int last_loop_time = 0;
 void loop() {
-
+  
   next_image();
+  EPD.end();
+  Serial.println("UNPLUG!");
   delay(10000);
 
 }

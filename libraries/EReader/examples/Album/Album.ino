@@ -254,6 +254,7 @@ void loop() {
     next_dir();
     display();
   }
+  ereader.EPD.end();
   delay(10);
 }
 

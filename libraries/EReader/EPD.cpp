@@ -320,10 +320,11 @@ void EPD_Class::end() {
   digitalWrite(this->EPD_Pin_PANEL_ON, LOW);
   digitalWrite(this->EPD_Pin_BORDER, LOW);
   digitalWrite(this->EPD_Pin_EPD_CS, LOW);
+  SPI_put(0x00);
 
   digitalWrite(this->EPD_Pin_DISCHARGE, HIGH);
 
-  SPI_put(0x00);
+  // SPI_put(0x00);
 
   Delay_ms(150);
 
