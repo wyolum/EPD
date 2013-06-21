@@ -254,8 +254,7 @@ void loop() {
     next_dir();
     display();
   }
-  ereader.EPD.end();
-  delay(10);
+  // ereader.EPD.end();
 }
 
 void draw_img(File imgFile){

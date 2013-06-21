@@ -124,6 +124,7 @@ void test_pattern2(void *buffer, uint32_t address, uint16_t length){
 
 // I/O setup
 void setup() {
+  Serial.begin(115200);
   ereader.setup(EPD_2_7); // starts SD
 	Serial.println();
 	Serial.println();

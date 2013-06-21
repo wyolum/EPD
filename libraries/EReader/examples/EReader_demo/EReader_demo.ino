@@ -43,7 +43,51 @@ void setup() {
 unsigned long int loop_count = 0;
 
 void loop() {
-  if(loop_count % 4 == 0){
+  if(true){
+    // ereader.draw_box(0, 0, 7, 7, true, true);
+    ereader.draw_line(0, 0, 4, 4, true);
+    ereader.setpix(10, 10, true);
+    int x = 0, y = 0;
+    for(int i=0; i < 20; i++){
+      //               0  0           8         8  // first run
+      ereader.draw_box(x    ,     x, x + 8 + i    , x + 8 + i    , true, true);
+      //                   1      1              7              7  // first run
+      ereader.draw_box(x + 1, x + 1, x + 8 + i - 1, x + 8 + i - 1, false, true);
+      x += 8 + i;
+    }
+    x = 20;
+    for(int y=0; y < 176;){
+      ereader.draw_box(x, y, x + 8, y + 8, true, true);
+      ereader.draw_box(x + 1, y + 1, x + 8 - 1, y + 8 - 1, false, true);
+      x += 8;
+      y += 8;
+    }
+    x = 39;
+    for(int y=0; y < 176;){
+      ereader.draw_box(    x,     y, x + 8    , y + 8    , true, true);
+      ereader.draw_box(x + 1, y + 1, x + 8 - 1, y + 8 - 1, false, true);
+      x += 9;
+      y += 9;
+    }
+    x = 48;
+    for(int y=0; y < 176;){
+      ereader.draw_box(    x,     y, x + 8    , y + 8    , true, true);
+      ereader.draw_box(x + 1, y + 1, x + 8 - 1, y + 8 - 1, false, true);
+      x += 10;
+      y += 10;
+    }
+    x = 59;
+    for(int y=0; y < 176;){
+      ereader.draw_box(    x,     y, x + 9    , y + 9    , true, true);
+      // ereader.draw_box(x + 1, y + 1, x + 8 - 1, y + 8 - 1, false, true);
+      x += 11;
+      y += 11;
+    }
+    for(int i=0; i < 20; i++){
+      ereader.draw_line(i * 10, 32, i * 10, 35, true);
+    }
+ }
+  else if(loop_count % 4 == 0){
     ereader.display_wif("/IMAGES/SEEED.WIF", 0, 0);
   }
   else if(loop_count % 4 == 1){
@@ -58,7 +102,7 @@ void loop() {
     ereader.display_wif("/IMAGES/AANDJ.WIF",  264 / 2, -176 / 2);
     ereader.display_wif("/IMAGES/CAT_SM.WIF", 264 / 2, 176 / 2);
     ereader.display_wif("/IMAGES/APHRODIT.WIF", 0, 0);
-    ereader.toggle_ellipse(random(0, 264), random(0, 176), 20, 20);
+    ereader.toggle_ellipse(random(0, 264), random(0, 176), 20, 20, false);
     ereader.put_ascii(random(0, 200), random(16, 150), "WyoLum ROCKS!!", true);
     for(uint8_t yy=0; yy < 6; yy++){
       ereader.setpix(128, yy, true); // draw some pixels
@@ -68,6 +112,6 @@ void loop() {
   }
   loop_count++;
   ereader.show();
-  ereader.sleep(4000); // allows EPD to power off gracefully
+  while(1)ereader.sleep(4000); // allows EPD to power off gracefully
 }
 

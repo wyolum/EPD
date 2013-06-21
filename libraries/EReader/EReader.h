@@ -85,13 +85,16 @@ class EReader{
   
   // draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
   // toggle each pix on ellipse
-  void toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry);
   void toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bool fill);
-
+  void toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry);
   // draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
   // in specified color: true=black, false=white
-  void draw_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bool color);
+  void draw_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bool color, bool fill);
 
+  // draw a box at specified starting and ending corners.  Start is upper left, end is lower right
+  void draw_box(uint16_t startx, uint16_t starty, uint16_t endx, uint16_t endy, bool color, bool fill);
+  
+  
   // display new image.  Call when image is complete
   void show();
 

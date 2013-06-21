@@ -37,7 +37,7 @@ void EReader::setup(EPD_size size){
     Serial.print("SD_CS");
     Serial.println(SD_CS, DEC);
     
-    while(1); delay(100);
+    // while(1); delay(100);
   }
 
 
@@ -80,13 +80,15 @@ void EReader::setup(EPD_size size){
   display_file = SD.open("__EPD__.DSP", FILE_WRITE);
   if(!display_file){
     Serial.println("Could not open file: __EPD__.DSP");
-    while(1) delay(100);
+    // while(1) delay(100);
   }    
   unifont_file = SD.open("unifont.wff");
+  if(!unifont_file){
+    Serial.println("Could not open file: unifont.wff");
+    // while(1) delay(100);
+  }    
 
 
-  // configure temperature sensor
-  S5813A.begin(EPD_TEMPERATURE);
   // _erase();
   pingpong = false;
   clear();
@@ -277,13 +279,98 @@ void EReader::toggle_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry)
 
 // draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
 // in specified color: true=black, false=white
-void EReader::draw_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bool color){
+void EReader::draw_ellipse(uint16_t cx, uint16_t cy, uint16_t rx, uint16_t ry, bool color, bool fill){
   float step = atan(min(1./rx, 1./ry));
   for(float theta = 0; theta < 2 * PI; theta+=step){
     setpix(rx * cos(theta) + cx, ry * sin(theta) + cy, color);
   }
 }
 
+void bitprint(uint8_t val){
+  for(uint8_t i=0; i < 8; i++){
+    Serial.print((val >> i) & 1);
+  }
+  Serial.println();
+}
+// draw a box at specified starting and ending corners.  Start is upper left, end is lower right
+void EReader::draw_box(uint16_t startx, uint16_t starty, uint16_t endx, uint16_t endy, bool color, bool fill){
+  uint32_t pos, y, x8;
+  uint8_t fill_byte = 0b11111111 * color;
+  uint8_t start_byte, end_byte, n_fill, old_byte, start_i, end_i;
+  bool my_display = !pingpong;
+  
+  if(startx > epd_width){
+    startx = epd_width;
+  }
+  if(endx > epd_width){
+    endx = epd_width;
+  }
+  if(starty > epd_height){
+    starty = epd_height;
+  }
+  if(endy > epd_height){
+    endy = epd_height;
+  }
+  start_i = startx / 8;
+  end_i = endx / 8;
+
+  if(end_i > start_i + 1){
+    n_fill = end_i - start_i - 1;
+  }
+  else{
+    n_fill = 0;
+  }
+  if(n_fill > 264/8){
+    Serial.print("n_fill too big: ");
+    Serial.println(n_fill);
+  }
+
+  start_byte = 0;
+  for(uint8_t i=startx % 8; i < 8; i++){
+    start_byte |= 1 << i;
+  }
+
+  end_byte = 0;
+  for(uint8_t i=0; i < endx % 8; i++){
+    end_byte |= (1 << i);
+  }
+  if(start_i == end_i){
+    start_byte &= end_byte;
+  }
+  if(!color){
+    start_byte = ~start_byte;
+    end_byte = ~end_byte;
+  }
+  if(fill){
+    for(y = starty; y < endy; y++){
+      pos = my_display * epd_bytes + y * epd_width / 8 + startx / 8;
+      // first byte takes some care
+      display_file.seek(pos);
+      old_byte = display_file.read();
+      display_file.seek(pos);
+      if(color){
+	display_file.write(start_byte | old_byte);
+      }
+      else{
+	display_file.write(start_byte & old_byte);
+      }
+      for(x8 = 0; x8 < n_fill; x8++){
+	display_file.write(fill_byte);
+      }
+      if(start_i != end_i){
+	pos = display_file.position();
+	old_byte = display_file.read();
+	display_file.seek(pos);
+	if(color){
+	  display_file.write(end_byte | old_byte);
+	}
+	else{
+	  display_file.write(end_byte & old_byte);
+	}
+      }
+    }
+  }
+}
 // display new image.  Call when image is complete
 void EReader::show(){
   // copy image data to old_image data
