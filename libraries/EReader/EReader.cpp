@@ -29,6 +29,32 @@ void EReader::reader(void *buffer, uint32_t address, uint16_t length){
   }
 }
 
+/**
+ * \brief Configure SPI and initialization
+ */
+void EReader::spi_attach(){	
+  SPI.begin();
+  pinMode(SCK, OUTPUT);
+  pinMode(MOSI, OUTPUT);	
+  pinMode(MISO, INPUT);
+  set_spi_for_epd();
+  EPD.begin(); // power up the EPD panel	
+}
+
+/**
+ * \brief Disable SPI, change to GPIO and set LOW
+ */
+void EReader::spi_detach(){
+  EPD.end();
+  SPI.end();
+  pinMode(SCK, OUTPUT);
+  pinMode(MOSI, OUTPUT);
+  pinMode(MISO, OUTPUT);
+  digitalWrite(SCK, LOW);
+  digitalWrite(MOSI, LOW);
+  digitalWrite(MISO, LOW);
+}
+
 // call in arduino setup function
 void EReader::setup(EPD_size size){
   pinMode(SD_CS, OUTPUT);
@@ -56,7 +82,7 @@ void EReader::setup(EPD_size size){
   epd_bytes = (epd_width * epd_height / 8);
 
   EPD.setup(size, EPD_PANEL_ON, EPD_BORDER, EPD_DISCHARGE, EPD_PWM, EPD_RESET, EPD_BUSY, EPD_EPD_CS);
-  pinMode(EPD_TEMPERATURE, INPUT);
+  // pinMode(EPD_TEMPERATURE, INPUT);
   pinMode(EPD_PWM, OUTPUT);
   pinMode(EPD_BUSY, INPUT);
   pinMode(EPD_RESET, OUTPUT);
@@ -385,8 +411,11 @@ void EReader::show(){
 }
 
 void EReader::sleep(uint32_t delay_ms){
-  EPD.end();
+  spi_detach();
   delay(delay_ms);
+}
+void EReader::wake(){
+  spi_attach();
 }
 //***  ensure clock is ok for EPD
 void EReader::set_spi_for_epd() {
@@ -439,7 +468,8 @@ void EReader::SD_image_reader(File imgFile, void *buffer, uint32_t address,
 // #define SLOW
 
 void EReader::_erase(){
-  int temperature = S5813A.read();
+  int temperature; // TJS: not used in badge (assume room temperature)
+  // int temperature = S5813A.read();
   // Serial.print("Temperature = ");
   // Serial.print(temperature);
   // Serial.println(" Celcius");

@@ -59,6 +59,9 @@ class EReader{
   // constructor
   EReader();
 
+  void spi_attach(); /** PDi added on 21 June*/
+  void spi_detach(); /** PDi added on 21 June*/
+
   // call in arduino setup function
   void setup(EPD_size size);
 
@@ -100,6 +103,8 @@ class EReader{
 
   // power off and delay
   void sleep(uint32_t delay_ms);
+  // turn on all necessary functions
+  void wake();
   
   // set spi params for epd
   void set_spi_for_epd();
