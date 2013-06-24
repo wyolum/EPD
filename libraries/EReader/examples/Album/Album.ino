@@ -18,7 +18,6 @@
 #include <SPI.h>
 #include <SD.h>
 #include "EPD.h"
-#include "S5813A.h"
 #include "EReader.h"
 
 // globals
@@ -61,6 +60,7 @@ void prev_wif(){
 }
 
 void open_cwd(){
+  SD.begin(SD_CS); // hack to wake SD up after detach.  returns false but seems to work.
   get_cwd_path(); // copy current dir path to path
   cwd.close();
   cwd = SD.open(path);
@@ -199,7 +199,7 @@ void setup() {
 }
 
 
-void interact(){
+void ser_interact(){
   char c;
   update = false;
   if(Serial.available()){
@@ -227,34 +227,40 @@ void interact(){
 }
 
 void display(){
+  // ereader.spi_attach();  
   erase_img(wif); // wif is still the old file
   wif.close();    // keep close and open calls in the same spot
   get_wif_path(); // store new wif name in path
   wif = SD.open(path); 
   draw_img(wif); // draw new wif
+  // ereader.spi_detach();  
 }
 
 // main loop
 unsigned long int loop_count = 0;
 void loop() {
-  interact();
+  bool update_needed = false;
+
+  ser_interact();
   if(analogRead(MODE_PIN) > 512){
     prev_wif();
-    display();
+    update_needed = true;
   }
   if(digitalRead(SEL_PIN)){
     next_wif();
-    display();
+    update_needed = true;
   }
   if(digitalRead(UP_PIN)){
     prev_dir();
-    display();
+    update_needed = true;
   }
   if(digitalRead(DOWN_PIN)){
     next_dir();
+    update_needed = true;
+  }
+  if(update_needed){
     display();
   }
-  // ereader.EPD.end();
 }
 
 void draw_img(File imgFile){

@@ -39,16 +39,18 @@ unsigned long int loop_count = 0;
 
 void loop() {
   Serial.println("start of loop()");
-  if(true){
+  if(loop_count % 4 == 0){
+    for(int i=0; i < 264; i+=8){
+      for(int j=0; j < 176; j+=8){
+	ereader.setpix(i, j, true);
+      }
+    }
     // ereader.draw_box(0, 0, 7, 7, true, true);
     ereader.draw_line(0, 0, 4, 4, true);
-    Serial.println("here1");
     
     ereader.setpix(10, 10, true);
     int x = 0, y = 0;
     for(int i=0; i < 20; i++){
-      Serial.print("  ");
-      Serial.println(i, DEC);
 
       //               0  0           8         8  // first run
       ereader.draw_box(x    ,     x, x + 8 + i    , x + 8 + i    , true, true);
@@ -56,18 +58,14 @@ void loop() {
       ereader.draw_box(x + 1, x + 1, x + 8 + i - 1, x + 8 + i - 1, false, true);
       x += 8 + i;
     }
-    Serial.println("here2");
     x = 20;
     for(int y=0; y < 176;){
-      Serial.print("  ");
-      Serial.println(y, DEC);
       ereader.draw_box(x, y, x + 8, y + 8, true, true);
       ereader.draw_box(x + 1, y + 1, x + 8 - 1, y + 8 - 1, false, true);
       x += 8;
       y += 8;
     }
     x = 39;
-    Serial.println("here3");
     for(int y=0; y < 176;){
       ereader.draw_box(    x,     y, x + 8    , y + 8    , true, true);
       ereader.draw_box(x + 1, y + 1, x + 8 - 1, y + 8 - 1, false, true);
@@ -75,7 +73,6 @@ void loop() {
       y += 9;
     }
     x = 48;
-    Serial.println("here4");
     for(int y=0; y < 176;){
       ereader.draw_box(    x,     y, x + 8    , y + 8    , true, true);
       ereader.draw_box(x + 1, y + 1, x + 8 - 1, y + 8 - 1, false, true);
@@ -83,22 +80,13 @@ void loop() {
       y += 10;
     }
     x = 59;
-    Serial.println("here5");
     for(int y=0; y < 176;){
       ereader.draw_box(    x,     y, x + 9    , y + 9    , true, true);
       // ereader.draw_box(x + 1, y + 1, x + 8 - 1, y + 8 - 1, false, true);
       x += 11;
       y += 11;
     }
-    Serial.println("here6");
-
-    for(int i=0; i < 20; i++){
-      ereader.draw_line(i * 10, 32, i * 10, 35, true);
-    }
  }
-  else if(loop_count % 4 == 0){
-    ereader.display_wif("/IMAGES/SEEED.WIF", 0, 0);
-  }
   else if(loop_count % 4 == 1){
     ereader.display_wif("/IMAGES/WYOLUM.WIF", 0, 0);
     ereader.put_unicode(30, 40, UNICODE_MSG, true);
@@ -119,14 +107,11 @@ void loop() {
     ereader.put_unicode(10, 140, UNICODE_MSG, true);
     ereader.toggle_line(70, 0, 120, 50);
   }
-  Serial.println("here7");
 
   loop_count++;
   ereader.show();
-    Serial.println("here8");
   // while(1)
   ereader.sleep(4000); // allows EPD to power off gracefully
   ereader.wake();
-  Serial.println("end of loop()");
 }
 
