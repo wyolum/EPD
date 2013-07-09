@@ -14,6 +14,8 @@
 
 #include <inttypes.h>
 #include <ctype.h>
+#include <avr/sleep.h> //Needed for sleep_mode
+#include <avr/power.h> //Needed for powering down perihperals such as the ADC/TWI and Timers
 
 #include <SPI.h>
 #include <SD.h>
@@ -71,9 +73,9 @@ void next_dir(){
   current_dir++;
   current_dir %= n_dir;
   open_cwd();
-  if(current_wif > n_wif - 1){
-    current_wif = 0;
-  }
+  // if(current_wif > n_wif - 1){
+  current_wif = 0;
+  //}
 }
 void prev_dir(){
   current_dir--;
@@ -81,9 +83,9 @@ void prev_dir(){
     current_dir = n_dir - 1;
   }
   open_cwd();
-  if(current_wif > n_wif - 1){
-    current_wif = 0;
-  }
+  //if(current_wif > n_wif - 1){
+  current_wif = 0;
+  //}
 }
 
 /*
@@ -154,12 +156,6 @@ int count_wifs(File dir){
   return out;
 }
 
-// I/O setup
-const int UP_PIN = 17;
-const int DOWN_PIN = 15;
-const int SEL_PIN = 16;
-const int MODE_PIN = A6;
-
 void setup() {
   int n = strlen(ROOT_DIR);
   bool done = false;
@@ -172,6 +168,7 @@ void setup() {
   pinMode(DOWN_PIN, INPUT);
   pinMode(SEL_PIN, INPUT);
   pinMode(MODE_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
   root = SD.open(ROOT_DIR);
   if(!root){
     Serial.print("Root not found:\n    ");
@@ -196,6 +193,15 @@ void setup() {
   current_dir = -1;
   next_dir();
   display();
+  for(int ii=0; ii < 3; ii++){
+    digitalWrite(LED_PIN, HIGH);
+    delay(100);
+    digitalWrite(LED_PIN, LOW);
+    delay(100);
+  }
+  // SLEEP TEST
+  // goToSleep();
+  // while(1) delay(100);
 }
 
 
@@ -227,19 +233,25 @@ void ser_interact(){
 }
 
 void display(){
-  // ereader.spi_attach();  
+  ereader.spi_attach();  
   erase_img(wif); // wif is still the old file
   wif.close();    // keep close and open calls in the same spot
   get_wif_path(); // store new wif name in path
   wif = SD.open(path); 
   draw_img(wif); // draw new wif
-  // ereader.spi_detach();  
+  ereader.spi_detach();  
 }
 
 // main loop
 unsigned long int loop_count = 0;
 void loop() {
   bool update_needed = false;
+  if(millis() % 2000 < 50){
+    digitalWrite(LED_PIN, HIGH);
+  }
+  else{
+    digitalWrite(LED_PIN, LOW);
+  }
 
   ser_interact();
   if(analogRead(MODE_PIN) > 512){
@@ -272,7 +284,6 @@ void draw_img(File imgFile){
   */
 
   //*** maybe need to ensure clock is ok for EPD
-  set_spi_for_epd();
 
   reset_wif();
   ereader.EPD.frame_cb(0, SD_reader, EPD_inverse);
@@ -285,7 +296,6 @@ void draw_img(File imgFile){
 void erase_img(File imgFile){
 
   //*** maybe need to ensure clock is ok for EPD
-  set_spi_for_epd();
 
   ereader.EPD.begin(); // power up the EPD panel
   reset_wif();
@@ -329,9 +339,27 @@ void SD_reader(void *buffer, uint32_t address, uint16_t length){
   //*** file operations above may have changed SPI mode
 }
 
-//***  ensure clock is ok for EPD
-void set_spi_for_epd() {
-	SPI.setBitOrder(MSBFIRST);
-	SPI.setDataMode(SPI_MODE0);
-	SPI.setClockDivider(SPI_CLOCK_DIV4);
+void goToSleep(){ 
+  digitalWrite(LED_PIN, LOW);
+  ereader.spi_detach();
+  // ereader.EPD.end();   // make sure EPD panel is off
+  
+  set_sleep_mode(SLEEP_MODE_PWR_SAVE);
+  sleep_enable();
+
+  //Shut off ADC, TWI, SPI, Timer0, Timer1
+
+  ADCSRA &= ~(1<<ADEN); //Disable ADC
+  ACSR = (1<<ACD); //Disable the analog comparator
+  DIDR0 = 0x3F; //Disable digital input buffers on all ADC0-ADC5 pins
+  DIDR1 = (1<<AIN1D)|(1<<AIN0D); //Disable digital input buffer on AIN1/0
+  
+  power_twi_disable();
+  power_spi_disable();
+  power_usart0_disable();
+  power_timer0_disable(); //Needed for delay_ms
+  power_timer1_disable();
+  power_timer2_disable(); 
+  sleep_mode();
+
 }

@@ -123,7 +123,7 @@ def resize_im():
     
 ## Original
 def display_im(im_filename):
-    global im, imtk, FILENAME
+    global FILENAME
     FILENAME = im_filename
     resize_im()
 
@@ -187,6 +187,7 @@ print sys.argv
 if len(sys.argv) > 1:
     fn = sys.argv[1]
     display_im(fn)
+    print fn
 root.mainloop()
 
 def main():

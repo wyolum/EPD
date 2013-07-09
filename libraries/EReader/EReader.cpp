@@ -82,7 +82,6 @@ void EReader::setup(EPD_size size){
   epd_bytes = (epd_width * epd_height / 8);
 
   EPD.setup(size, EPD_PANEL_ON, EPD_BORDER, EPD_DISCHARGE, EPD_PWM, EPD_RESET, EPD_BUSY, EPD_EPD_CS);
-  // pinMode(EPD_TEMPERATURE, INPUT);
   pinMode(EPD_PWM, OUTPUT);
   pinMode(EPD_BUSY, INPUT);
   pinMode(EPD_RESET, OUTPUT);
@@ -568,8 +567,5 @@ void reader_wrap(void *buffer, uint32_t address, uint16_t length){
   ereader.reader(buffer, address, length);
 }
 
-float getTemp(){
-  return (digitalRead(EPD_TEMPERATURE) - MCP9700_C0) / MCP9700_GAIN;
-}
 
 EReader ereader;

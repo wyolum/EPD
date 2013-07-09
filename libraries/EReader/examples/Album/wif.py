@@ -74,17 +74,29 @@ class WIF:
         self.draw.text((x, y), txt, color, font=font)
     
     def addBreadCrumb(self, x, y, row, col, shape, color=BLACK):
+        startx = WIDTH - max(shape) * BREADCRUMB_SIZE
+        starty = HEIGHT - len(shape) * BREADCRUMB_SIZE
         for i, n_col in enumerate(shape):
             for j in range(n_col):
-                if i == row and j == col:
-                    self.draw.rectangle((x + BREADCRUMB_SIZE * j + 1, y + (BREADCRUMB_SIZE) * i,
-                                         x + BREADCRUMB_SIZE * (j + 1), y + BREADCRUMB_SIZE * (i + 1) - 1),
-                                        WHITE)
-                else:
-                    self.draw.rectangle((x + (BREADCRUMB_SIZE + 0) * j, y + BREADCRUMB_SIZE * i,
-                                         x + (BREADCRUMB_SIZE + 0) * (j + 1), y + BREADCRUMB_SIZE * (i + 1)),
-                                        BLACK)
-        
+                self.draw.rectangle((startx + x + BREADCRUMB_SIZE * j          , starty + y + BREADCRUMB_SIZE * i,
+                                     startx + x + BREADCRUMB_SIZE * (j + 1) - 1, starty+ y + BREADCRUMB_SIZE * (i + 1) - 1),
+                                    BLACK)
+        i = row
+        j = col
+        self.draw.rectangle((startx + x + BREADCRUMB_SIZE * j          , starty + y + BREADCRUMB_SIZE * i,
+                             startx + x + BREADCRUMB_SIZE * (j + 1) - 1, starty+ y + BREADCRUMB_SIZE * (i + 1) - 1),
+                            WHITE)
+        segs = [(startx - 1, HEIGHT),
+                (startx - 1, starty - 1),
+                (startx + shape[0] * BREADCRUMB_SIZE, starty - 1)]
+        for i, n_col in enumerate(shape):
+            segs.append((startx + shape[i] * BREADCRUMB_SIZE, (i + 1) * BREADCRUMB_SIZE  + starty - 1))
+            if i < len(shape) - 1:
+                segs.append((startx + shape[i + 1] * BREADCRUMB_SIZE, (i + 1) * BREADCRUMB_SIZE  + starty - 1))
+        self.draw.line(segs, fill=BLACK)
+
+        ## draw outline
+        self.draw.line
     def copy(self):
         return WIF(size=self.size, background=self.im)
         
@@ -94,6 +106,9 @@ class WIF:
     def saveas(self, fn):
         towif(self.im, fn, WIDTH, HEIGHT)
         print 'wrote', fn
+
+    def rotate180(self):
+        self.im = self.im.rotate(180)
 
 def towif(im, outfn, width, height):
     ''' 

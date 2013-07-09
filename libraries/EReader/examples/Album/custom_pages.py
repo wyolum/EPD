@@ -69,7 +69,7 @@ class Attendee:
         return '\n'.join([self.name, self.email, self.phone, self.website])
     
     def getRoles(self):
-        out = ['Participant']
+        out = ['Summiter']
         if self.speaker[0].lower() == 'y':
             out.append('Speaker')
         if self.sponsor[0].lower() == 'y':
@@ -81,7 +81,7 @@ class Attendee:
 
 create_sched('schedule.txt')
 ### Standard Pages
-def wif_directory(dir, level):
+def wif_directory(dir, level, rotate=False):
     files = glob.glob(os.path.join(dir, '[A-Z].png'))
     files.sort()
     for i, img_fn in enumerate(files):
@@ -89,10 +89,11 @@ def wif_directory(dir, level):
         fn = os.path.split(img_fn)[1]
         page.addImage(Image.open(img_fn), 0, 0)
         page.addBreadCrumb(0, 0, level, i, BREADCRUMB_SHAPE)
+        if rotate:
+            page.rotate180()
         page.saveas(OUTPUT_DIR + chr(ord('A') + level) + '/' + fn[0] + '.WIF')
-
 wif_directory(LOGO_DIR, 1)
-wif_directory(SCHEDULE_DIR, 2)
+wif_directory(SCHEDULE_DIR, 2, rotate=True)
 
 def copy_dir(source, dest):
     if os.path.exists(dest):
@@ -120,9 +121,9 @@ for person in people[2:3]:
     for page in pages:
         for i, role in enumerate(person.roles):
             # page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
-            page.addUnifont(role, 0, 10 + i * 16 + 5, bigascii=False)
+            page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=True)
         page.addText(person.name, WIDTH/2, HEIGHT, font_size=NAME_FONT_SIZE, halign='center', valign='bottom')
-    # pages[0].show()
+    pages[0].show()
 
     dir = CUSTOM_DIR + '%04d-%s/ALBUM/' % (int(person.id), '_'.join(person.name.split()))
     copy_dir(OUTPUT_DIR + 'B/', dir + 'B/')
@@ -139,4 +140,4 @@ for person in people[2:3]:
     for i, page in enumerate(pages):
         page.addBreadCrumb(0, 0, 0, i, BREADCRUMB_SHAPE)
         page.saveas(dir + chr(ord('A') + i) + '.WIF')
-        # page.show()
+    # page.show()

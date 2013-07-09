@@ -18,12 +18,28 @@
 #include "EPD.h"
 #include "SD.h"
 
-// Arduino IO layout
-const int EPD_TEMPERATURE = A0; // A4
+// set HW_VERSION to 0 when following EPD schematic
+#define HW_VERSION3
+
+
+#ifndef HW_VERSION3
+
 const int EPD_PANEL_ON = 2; // ORIG V2 or lower
 const int EPD_BORDER = 3;  // ORIG V2 or lower
-// const int EPD_PANEL_ON = A0; // V3 or higher
-// const int EPD_BORDER = A1; // V3 of higher
+const int UP_PIN = 17;
+const int DOWN_PIN = 15;
+const int SEL_PIN = 16;
+const int MODE_PIN = A6;
+#else
+const int EPD_PANEL_ON = A2; // V3 or higher
+const int EPD_BORDER = A3;   // V3 of higher
+const int UP_PIN = 2;        // INT0
+const int DOWN_PIN = 15;
+const int SEL_PIN = 3;       // INT1
+const int MODE_PIN = A6;
+#endif
+
+const int LED_PIN = A0;
 const int EPD_DISCHARGE = 4;
 const int EPD_PWM = 5;
 const int EPD_RESET = 6;
