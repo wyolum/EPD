@@ -70,6 +70,8 @@ class Attendee:
     
     def getRoles(self):
         out = ['Summiter']
+        if self.organizer[0].lower() == 'y':
+            out.append('Organizer')
         if self.speaker[0].lower() == 'y':
             out.append('Speaker')
         if self.sponsor[0].lower() == 'y':
@@ -102,7 +104,7 @@ def copy_dir(source, dest):
     shutil.copytree(source, dest)
 
 ### Custom Pages    
-FILENAME = 'attendees.csv'
+FILENAME = 'summiters.csv'
 people = list(csv.reader(open(FILENAME)))
 header = people[0]
 people = people[1:]
@@ -110,7 +112,7 @@ people = people[1:]
 shutil.rmtree(CUSTOM_DIR)
 os.mkdir(CUSTOM_DIR)
 
-for person in people[2:3]:
+for person in people[-1:]:
     person = Attendee(person, header)
     pages = [WIF() for i in range(N_PAGE)]
     
@@ -120,8 +122,12 @@ for person in people[2:3]:
     pages[2].addImage(Image.open(LOGO_DIR + person.logo), 0, 0)
     for page in pages:
         for i, role in enumerate(person.roles):
+            if len(role) <= 8:
+                page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=True)
+            else:
+                page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=False)
+            # page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=False)
             # page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
-            page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=True)
         page.addText(person.name, WIDTH/2, HEIGHT, font_size=NAME_FONT_SIZE, halign='center', valign='bottom')
     pages[0].show()
 
