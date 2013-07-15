@@ -112,7 +112,7 @@ people = people[1:]
 shutil.rmtree(CUSTOM_DIR)
 os.mkdir(CUSTOM_DIR)
 
-for person in people[-1:]:
+for person in people[:]:
     person = Attendee(person, header)
     pages = [WIF() for i in range(N_PAGE)]
     
@@ -129,7 +129,7 @@ for person in people[-1:]:
             # page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=False)
             # page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
         page.addText(person.name, WIDTH/2, HEIGHT, font_size=NAME_FONT_SIZE, halign='center', valign='bottom')
-    pages[0].show()
+    # pages[0].show()
 
     dir = CUSTOM_DIR + '%04d-%s/ALBUM/' % (int(person.id), '_'.join(person.name.split()))
     copy_dir(OUTPUT_DIR + 'B/', dir + 'B/')

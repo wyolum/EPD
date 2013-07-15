@@ -62,7 +62,7 @@ class EReader{
   // clear screen
   void _erase();
   void _draw();
-
+  bool _attached;
  public:
   EPD_Class EPD;
   File display_file;

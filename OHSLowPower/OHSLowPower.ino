@@ -48,7 +48,8 @@ unsigned short my_height;
 // after a certain number of milliseconds with no button presses go to sleep.
 // if a button is pressed, it resets the timer.
 long lastWakeTime; //reset with every interaction
-#define AWAKETIME 15000 // how long to stay awake
+#define AWAKETIME 60000 // how long to stay awake
+#define FOCUSTIME 15000 // how long to stay awake
 
 
 /*
@@ -168,7 +169,7 @@ void setup() {
   int n = strlen(ROOT_DIR);
   bool done = false;
 
-  Serial.begin(57600);
+  Serial.begin(115200);
   Serial.println("WyoLum, LLC 2013");
   Serial.println("Buy Open Source Hardware!");
   ereader.setup(EPD_2_7); // starts SD
@@ -245,7 +246,15 @@ void display(){
   get_wif_path(); // store new wif name in path
   wif = SD.open(path); 
   draw_img(wif); // draw new wif
-  ereader.spi_detach();  
+  uint16_t start = millis();
+  // ereader.spi_detach(); // this call takes .8 seconds to execute!
+  Serial.println(millis() - start);
+  for(int ii=0; ii<4; ii++){
+    digitalWrite(LED_PIN, ii % 2 == 0 );
+    if(ii < 3){
+      delay(50);
+    }
+  }
 }
 
 // main loop
@@ -259,39 +268,41 @@ void loop() {
     digitalWrite(LED_PIN, LOW);
   }
   long current = millis();
-  if ((current - lastWakeTime) > AWAKETIME)
-  {
+  if ((current - lastWakeTime) > FOCUSTIME){
+    ereader.spi_detach(); // this call takes .8 seconds to execute!
+  }
+  else if ((current - lastWakeTime) > AWAKETIME){
  //   Serial.println("should sleep");
     goToSleep();
   }
+  
 
   ser_interact();
   if(analogRead(MODE_PIN) > 512){
 //    Serial.println("Mode");
-    lastWakeTime = current;
     prev_wif();
     update_needed = true;
   }
   if(digitalRead(SEL_PIN)){
 //    Serial.println("Sel");
-    lastWakeTime = current;
     next_wif();
     update_needed = true;
   }
   if(digitalRead(UP_PIN)){
 //    Serial.println("Up");
-    lastWakeTime = current;
     prev_dir();
     update_needed = true;
   }
   if(digitalRead(DOWN_PIN)){
 //     Serial.println("down");
-    lastWakeTime = current;
     next_dir();
     update_needed = true;
   }
   if(update_needed){
+    lastWakeTime = current;
     display();
+  }
+  else{
   }
 }
 
@@ -404,7 +415,7 @@ void goToSleep(){
 void wake()
 {
   // apparently the uart takes a while to reconfigure on waking up
-   Serial.begin(57600);
+   Serial.begin(115200);
   delay(100); // crude debounce
 }
 

@@ -33,30 +33,37 @@ void EReader::reader(void *buffer, uint32_t address, uint16_t length){
  * \brief Configure SPI and initialization
  */
 void EReader::spi_attach(){	
-  SPI.begin();
-  pinMode(SCK, OUTPUT);
-  pinMode(MOSI, OUTPUT);	
-  pinMode(MISO, INPUT);
-  set_spi_for_epd();
-  EPD.begin(); // power up the EPD panel	
+  if(!_attached){
+    SPI.begin();
+    pinMode(SCK, OUTPUT);
+    pinMode(MOSI, OUTPUT);	
+    pinMode(MISO, INPUT);
+    set_spi_for_epd();
+    EPD.begin(); // power up the EPD panel	
+    _attached = true;
+  }
 }
 
 /**
  * \brief Disable SPI, change to GPIO and set LOW
  */
 void EReader::spi_detach(){
-  EPD.end();
-  SPI.end();
-  pinMode(SCK, OUTPUT);
-  pinMode(MOSI, OUTPUT);
-  pinMode(MISO, OUTPUT);
-  digitalWrite(SCK, LOW);
-  digitalWrite(MOSI, LOW);
-  digitalWrite(MISO, LOW);
+  if(_attached){
+    EPD.end();
+    SPI.end();
+    pinMode(SCK, OUTPUT);
+    pinMode(MOSI, OUTPUT);
+    pinMode(MISO, OUTPUT);
+    digitalWrite(SCK, LOW);
+    digitalWrite(MOSI, LOW);
+    digitalWrite(MISO, LOW);
+    _attached = false;
+  }
 }
 
 // call in arduino setup function
 void EReader::setup(EPD_size size){
+  _attached = false;
   pinMode(SD_CS, OUTPUT);
   if (!SD.begin(SD_CS)) {
     Serial.println("SD initialization failed!!");
