@@ -1,0 +1,6 @@
+# ignore python cruft
+*.pyc
+# ignore editor artifacts
+*~
+*-bak
+*.swp
