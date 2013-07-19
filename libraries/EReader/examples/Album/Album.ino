@@ -13,6 +13,7 @@
 // governing permissions and limitations under the License.
 
 #include <inttypes.h>
+#include <avr/interrupt.h>
 #include <ctype.h>
 #include <avr/sleep.h> //Needed for sleep_mode
 #include <avr/power.h> //Needed for powering down perihperals such as the ADC/TWI and Timers
@@ -42,6 +43,14 @@ File wif;
 bool update = false;
 unsigned short my_width;
 unsigned short my_height;
+
+// these are involved in determining when we go to sleep
+// after a certain number of milliseconds with no button presses go to sleep.
+// if a button is pressed, it resets the timer.
+long lastWakeTime; //reset with every interaction
+#define AWAKETIME 60000 // how long to stay awake
+#define FOCUSTIME 15000 // how long to stay awake
+
 
 /*
   increment image number by one
@@ -199,9 +208,7 @@ void setup() {
     digitalWrite(LED_PIN, LOW);
     delay(100);
   }
-  // SLEEP TEST
-  // goToSleep();
-  // while(1) delay(100);
+
 }
 
 
@@ -239,7 +246,15 @@ void display(){
   get_wif_path(); // store new wif name in path
   wif = SD.open(path); 
   draw_img(wif); // draw new wif
-  ereader.spi_detach();  
+  uint16_t start = millis();
+  // ereader.spi_detach(); // this call takes .8 seconds to execute!
+  Serial.println(millis() - start);
+  for(int ii=0; ii<4; ii++){
+    digitalWrite(LED_PIN, ii % 2 == 0 );
+    if(ii < 3){
+      delay(50);
+    }
+  }
 }
 
 // main loop
@@ -252,26 +267,42 @@ void loop() {
   else{
     digitalWrite(LED_PIN, LOW);
   }
+  long current = millis();
+  if ((current - lastWakeTime) > FOCUSTIME){
+    ereader.spi_detach(); // this call takes .8 seconds to execute!
+  }
+  else if ((current - lastWakeTime) > AWAKETIME){
+ //   Serial.println("should sleep");
+    goToSleep();
+  }
+  
 
   ser_interact();
   if(analogRead(MODE_PIN) > 512){
+//    Serial.println("Mode");
     prev_wif();
     update_needed = true;
   }
   if(digitalRead(SEL_PIN)){
+//    Serial.println("Sel");
     next_wif();
     update_needed = true;
   }
   if(digitalRead(UP_PIN)){
+//    Serial.println("Up");
     prev_dir();
     update_needed = true;
   }
   if(digitalRead(DOWN_PIN)){
+//     Serial.println("down");
     next_dir();
     update_needed = true;
   }
   if(update_needed){
+    lastWakeTime = current;
     display();
+  }
+  else{
   }
 }
 
@@ -341,25 +372,50 @@ void SD_reader(void *buffer, uint32_t address, uint16_t length){
 
 void goToSleep(){ 
   digitalWrite(LED_PIN, LOW);
-  ereader.spi_detach();
+//  ereader.spi_detach();
   // ereader.EPD.end();   // make sure EPD panel is off
-  
-  set_sleep_mode(SLEEP_MODE_PWR_SAVE);
+  delay(500);
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
+  attachInterrupt(0,wake,RISING); // pin 2 intterupt UP button on V3 
+  attachInterrupt(1,wake,RISING);// pin 3 interrupt  SEL button on V3
 
-  //Shut off ADC, TWI, SPI, Timer0, Timer1
-
-  ADCSRA &= ~(1<<ADEN); //Disable ADC
-  ACSR = (1<<ACD); //Disable the analog comparator
-  DIDR0 = 0x3F; //Disable digital input buffers on all ADC0-ADC5 pins
-  DIDR1 = (1<<AIN1D)|(1<<AIN0D); //Disable digital input buffer on AIN1/0
+ #ifndef COMPLICATED
+ //Shut off ADC, TWI, SPI, Timer0, Timer1
+ // ADCSRA &= ~(1<<ADEN); //Disable ADC
+ // ACSR = (1<<ACD); //Disable the analog comparator
+ // DIDR0 = 0x3F; //Disable digital input buffers on all ADC0-ADC5 pins
+ // DIDR1 = (1<<AIN1D)|(1<<AIN0D); //Disable digital input buffer on AIN1/0
   
   power_twi_disable();
-  power_spi_disable();
+//  power_spi_disable();
   power_usart0_disable();
-  power_timer0_disable(); //Needed for delay_ms
+//  power_timer0_disable(); //Needed for delay_ms and apparently for pin interrupts
   power_timer1_disable();
   power_timer2_disable(); 
-  sleep_mode();
+ #endif
+  sleep_mode(); // this immediately goes to sleep
+  // and when we wake up, we will execute this
+  detachInterrupt(0);// we don't want to keep getting interrupted when waking
+  detachInterrupt(1);
+
+  sleep_disable();
+  power_twi_enable();
+//  power_spi_enable();
+  power_usart0_enable();
+//  power_timer0_enable(); //Needed for delay_ms
+  power_timer1_enable();
+  power_timer2_enable(); 
+
+  //Serial.println("returning from sleep");
+  lastWakeTime = millis();
+
 
 }
+void wake()
+{
+  // apparently the uart takes a while to reconfigure on waking up
+   Serial.begin(115200);
+  delay(100); // crude debounce
+}
+
