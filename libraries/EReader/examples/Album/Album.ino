@@ -48,8 +48,8 @@ unsigned short my_height;
 // after a certain number of milliseconds with no button presses go to sleep.
 // if a button is pressed, it resets the timer.
 long lastWakeTime; //reset with every interaction
-#define AWAKETIME 60000 // how long to stay awake
-#define FOCUSTIME 15000 // how long to stay awake
+#define AWAKETIME 80000 // how long to stay awake
+#define FOCUSTIME 20000 // how long to stay awake
 
 
 /*
@@ -240,6 +240,7 @@ void ser_interact(){
 }
 
 void display(){
+  digitalWrite(LED_PIN, LOW);
   ereader.spi_attach();  
   erase_img(wif); // wif is still the old file
   wif.close();    // keep close and open calls in the same spot
@@ -261,15 +262,17 @@ void display(){
 unsigned long int loop_count = 0;
 void loop() {
   bool update_needed = false;
-  if(millis() % 2000 < 50){
+  if(millis() % (2000 * (2 - ereader.attached))  < 50){
     digitalWrite(LED_PIN, HIGH);
   }
   else{
     digitalWrite(LED_PIN, LOW);
   }
   long current = millis();
-  if ((current - lastWakeTime) > FOCUSTIME){
+  if ((current - lastWakeTime) > FOCUSTIME && ereader.attached){
+    digitalWrite(LED_PIN, LOW);
     ereader.spi_detach(); // this call takes .8 seconds to execute!
+    Serial.println("ereader detached");
   }
   else if ((current - lastWakeTime) > AWAKETIME){
  //   Serial.println("should sleep");

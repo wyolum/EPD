@@ -62,8 +62,8 @@ class EReader{
   // clear screen
   void _erase();
   void _draw();
-  bool _attached;
  public:
+  bool attached; // true if spi display is ready, false if "detached"
   EPD_Class EPD;
   File display_file;
   File unifont_file;
