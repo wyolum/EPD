@@ -17,6 +17,8 @@
 #include "S5813A.h"
 
 EReader::EReader(){
+  initialized = false;
+  attached = false;
 }
 
 void EReader::reader(void *buffer, uint32_t address, uint16_t length){
@@ -26,6 +28,30 @@ void EReader::reader(void *buffer, uint32_t address, uint16_t length){
   display_file.seek(offset + address);
   for(uint16_t i=0; i < length; i++){
     my_buffer[i] = display_file.read();
+  }
+}
+
+void EReader::error(int code_num){
+  char *error_msg = "ERROR_CODE: ";
+
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  Serial.print(error_msg);
+  Serial.println(code_num);
+  ereader.put_ascii(0, 0, error_msg, BLACK);
+  ereader.put_char(0, 16, '0' + code_num, BLACK);
+  if(initialized){
+    ereader.show();
+  }
+  ereader.spi_detach();
+  while(1){
+    for(int i=0; i < code_num + 3; i++){
+      digitalWrite(LED_PIN, HIGH);
+      delay(100);
+      digitalWrite(LED_PIN, LOW);
+      delay(100);
+    }
+    delay(1000);
   }
 }
 
@@ -112,12 +138,12 @@ void EReader::setup(EPD_size size){
   display_file = SD.open("__EPD__.DSP", FILE_WRITE);
   if(!display_file){
     Serial.println("Could not open file: __EPD__.DSP");
-    // while(1) delay(100);
+    error(FILE_NOT_FOUND_CODE);
   }    
   unifont_file = SD.open("unifont.wff");
   if(!unifont_file){
     Serial.println("Could not open file: unifont.wff");
-    // while(1) delay(100);
+    error(FILE_NOT_FOUND_CODE);
   }    
 
 
@@ -126,6 +152,7 @@ void EReader::setup(EPD_size size){
   clear();
   pingpong = true;
   clear();
+  initialized = true;
 }
 
 // clear the display

@@ -50,6 +50,13 @@ const uint8_t UNIFONT_RECLEN = 33;
 // const int SD_CS = 10; // delete me!
 const int SD_CS = 9; // production
 
+const bool BLACK = true;
+const bool WHITE = false;
+
+// error codes
+const uint8_t SD_ERROR_CODE = 0;
+const uint8_t FILE_NOT_FOUND_CODE = 1;
+
 const float MCP9700_C0 = 155.15151515;   // 500 mV measured with 3v3 reference at 0 DEG C with 10 bits
 const float MCP9700_GAIN = 3.103030303; // 10 mV / DEG C measured with 3v3 ref
 // C = C0 + GAIN * Temp
@@ -64,6 +71,7 @@ class EReader{
   void _draw();
  public:
   bool attached; // true if spi display is ready, false if "detached"
+  bool initialized;
   EPD_Class EPD;
   File display_file;
   File unifont_file;
@@ -75,6 +83,8 @@ class EReader{
   // constructor
   EReader();
 
+
+  void error(int code_num);
   void spi_attach(); /** PDi added on 21 June*/
   void spi_detach(); /** PDi added on 21 June*/
 

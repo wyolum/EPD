@@ -31,6 +31,7 @@ const char* ROOT_DIR = "ALBUM/";
 char path[20];
 const uint8_t CMD_BUF_LEN = 10;
 const uint8_t cmd_pending = 0;
+
 char cmd_buffer[CMD_BUF_LEN];
 
 int current_wif = 0;
@@ -49,8 +50,7 @@ unsigned short my_height;
 // if a button is pressed, it resets the timer.
 long lastWakeTime; //reset with every interaction
 #define AWAKETIME 80000 // how long to stay awake
-#define FOCUSTIME 20000 // how long to stay awake
-
+#define FOCUSTIME 12250 // how long keep optimal responsiveness
 
 /*
   increment image number by one
@@ -182,7 +182,7 @@ void setup() {
   if(!root){
     Serial.print("Root not found:\n    ");
     Serial.println(ROOT_DIR);
-    while(1) delay(100);
+    ereader.error(SD_ERROR_CODE);
   }
   get_cwd_path();
 
@@ -202,13 +202,14 @@ void setup() {
   current_dir = -1;
   next_dir();
   display();
+
   for(int ii=0; ii < 3; ii++){
     digitalWrite(LED_PIN, HIGH);
     delay(100);
     digitalWrite(LED_PIN, LOW);
     delay(100);
   }
-
+  // ereader.spi_detach();
 }
 
 
@@ -249,11 +250,12 @@ void display(){
   draw_img(wif); // draw new wif
   uint16_t start = millis();
   // ereader.spi_detach(); // this call takes .8 seconds to execute!
-  Serial.println(millis() - start);
-  for(int ii=0; ii<4; ii++){
-    digitalWrite(LED_PIN, ii % 2 == 0 );
-    if(ii < 3){
-      delay(50);
+  if(true){
+    for(int ii=0; ii<4; ii++){
+      digitalWrite(LED_PIN, ii % 2 == 0 );
+      if(ii < 3){
+	delay(25);
+      }
     }
   }
 }
@@ -262,7 +264,11 @@ void display(){
 unsigned long int loop_count = 0;
 void loop() {
   bool update_needed = false;
-  if(millis() % (2000 * (2 - ereader.attached))  < 50){
+  int pulse = millis() % (2000 * (2 - ereader.attached));
+  if(pulse  < 50){
+    digitalWrite(LED_PIN, HIGH);
+  }
+  else if(150 < pulse && pulse < 250){
     digitalWrite(LED_PIN, HIGH);
   }
   else{
