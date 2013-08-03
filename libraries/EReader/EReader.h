@@ -136,7 +136,15 @@ class EReader{
   void set_spi_for_epd();
   
   uint16_t put_char(uint16_t x, uint16_t y, uint16_t unic, bool color);
+
+/*
+  put ASCII string at location x, y
+ */
   uint16_t put_ascii(uint16_t x, uint16_t y, char * ascii, bool color);
+
+/*
+  put unicode string at location x, y
+ */
   uint16_t put_unicode(uint16_t x, uint16_t y, uint16_t * unic, bool color);
   // used to pass to EPD 
   void SD_image_dims(File imgFile, unsigned short *h, unsigned short *w);

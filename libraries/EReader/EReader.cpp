@@ -25,10 +25,13 @@ void EReader::reader(void *buffer, uint32_t address, uint16_t length){
   byte *my_buffer = (byte *)buffer;
   uint32_t offset = pingpong * epd_bytes;
 
-  display_file.seek(offset + address);
+  SPI.setClockDivider(SPI_CLOCK_DIV2);
+
+  display_file.seek(offset + address); // TODO: don't set address each time for sequential reads?
   for(uint16_t i=0; i < length; i++){
     my_buffer[i] = display_file.read();
   }
+  SPI.setClockDivider(SPI_CLOCK_DIV4);
 }
 
 void EReader::error(int code_num){
@@ -581,7 +584,9 @@ bool EReader::char_is_blank(uint32_t unic){
   }
   return out;
 }
-
+/*
+  put ASCII string at location x, y
+ */
 uint16_t EReader::put_ascii(uint16_t x, uint16_t y, char * ascii, bool color){
   char c = 'A';
   for(uint8_t i = 0; ascii[i] > 0; i++){
