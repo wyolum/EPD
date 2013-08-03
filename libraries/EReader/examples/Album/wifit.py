@@ -12,7 +12,7 @@ W = 3 * w
 H = 3 * h
 file_opt={}
 ACTIVE_REGION = (w, h, 2 * w, 2 * h)
-DEFAULT_IMAGE = 'Anool.png'
+DEFAULT_IMAGE = 'DEFAULT.PNG'
 
 def towif(im, outfn, width, height):
     ''' 
@@ -129,6 +129,7 @@ class WIF:
     def save(self, event):
         pass
 root = Tkinter.Tk()
+root.wm_title('WyoLum Image Format!')
 canvas = Tkinter.Canvas(root, width=W, height=H)
 canvas.pack()
 
@@ -159,8 +160,9 @@ brightness.pack(side=Tkinter.LEFT)
 control_frame.pack()
 def file_open_dialog():
     out = tkFileDialog.askopenfilename(**file_opt)
-    wif.file_open(out)
-    wif.show()
+    if out:
+        wif.file_open(out)
+        wif.show()
 def file_save_dialog():
     # wif = myEqualize(im, contrast_val, brightness_val)
     fn = tkFileDialog.asksaveasfilename(
@@ -169,7 +171,8 @@ def file_save_dialog():
             ('WyoLum Image Format', '.WIF'),
             ('Portable Network Graphics', '.png')
             ])
-    wif.file_save(fn)
+    if fn:
+        wif.file_save(fn)
 
 menubar = Tkinter.Menu(root)
 root.config(menu=menubar)
