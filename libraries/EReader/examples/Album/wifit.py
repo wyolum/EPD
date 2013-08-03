@@ -12,7 +12,7 @@ W = 3 * w
 H = 3 * h
 file_opt={}
 ACTIVE_REGION = (w, h, 2 * w, 2 * h)
-DEFAULT_IMAGE = 'BRICKS.png'
+DEFAULT_IMAGE = 'Anool.png'
 
 def towif(im, outfn, width, height):
     ''' 
