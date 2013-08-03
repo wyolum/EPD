@@ -12,6 +12,7 @@ W = 3 * w
 H = 3 * h
 file_opt={}
 ACTIVE_REGION = (w, h, 2 * w, 2 * h)
+DEFAULT_IMAGE = 'BRICKS.png'
 
 def towif(im, outfn, width, height):
     ''' 
@@ -77,8 +78,6 @@ class WIF:
 
     def resize(self, event):
         self.scale = self.sscale + (event.x - self.start[0]) / float(W)
-        self.pos = (self.start[0] + (self.start[0] - self.pos[0]) * self.scale,
-                    self.start[1] + (self.start[1] - self.pos[1]) * self.scale)
         self.show()
 
     def save_scale(self, event):
@@ -99,13 +98,14 @@ class WIF:
             ## rescale to fit
             scale = min([ W / float(x), H / float(y) ])
             self.scale = scale
+            self.pos = (0, 0)
         else:
-            self.scale = 1.       ## during drags
-        self.sscale = scale      ## saved between drags
+            self.scale = 1.
+            self.pos = ((W - x)/2, (H - y)/2)
+        self.sscale = self.scale      ## saved between drags
         self.fn = fn
         self.contrast = 1.
         self.brightness = 1.
-        self.pos = (0, 0)
         self.id = None
         self.start = (None, None)
 
@@ -131,8 +131,14 @@ class WIF:
 root = Tkinter.Tk()
 canvas = Tkinter.Canvas(root, width=W, height=H)
 canvas.pack()
-wif = WIF('heart_beat.png', canvas)
-# wif = WIF('FlowMeter.png', canvas)
+
+# main
+import sys
+if len(sys.argv) > 1:
+    fn = sys.argv[1]
+    wif = WIF(fn, canvas)
+else:
+    wif = WIF(DEFAULT_IMAGE, canvas)
 
 control_frame = Tkinter.Frame(root)
 contrast = Tkinter.Scale(control_frame, from_=-5, to = 5, 
