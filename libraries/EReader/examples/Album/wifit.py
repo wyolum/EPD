@@ -48,6 +48,7 @@ def next(step=1):
         abspath = os.path.abspath(os.path.join(path, fn))
     files = glob.glob(path + '/*.png')
     files.extend(glob.glob(path + '/*.PNG'))
+    files.extend(glob.glob(path + '/*.wif'))
     files.extend(glob.glob(path + '/*.WIF'))
     files.sort()
     i = files.index(abspath) + step
@@ -122,6 +123,7 @@ class WIF:
         self.canvas.bind('<B3-Motion>', self.resize)
         self.canvas.bind('<ButtonRelease-3>', self.save_scale)
         self.canvas.tag_raise("rect")
+        root.wm_title('WyoLum Image Format!   ' + os.path.split(self.fn)[-1])
 
     def down(self, event):
         self.start = (event.x, event.y)
@@ -160,11 +162,15 @@ class WIF:
                 return ord(val) >> i & 1
 
             f = open(fn)
-            height, width = struct.unpack('HH', f.read(4))
-            size = (width, height)
-            dat = f.read(height * width // 8)
+            try:
+                height, width = struct.unpack('HH', f.read(4))
+                size = (width, height)
+                dat = f.read(height * width // 8)
             ## turn each byte into 8 pixel values
-            ldat = [(1 - bit(byte, j)) * 255 for byte in dat for j in range(8)]
+                ldat = [(1 - bit(byte, j)) * 255 for byte in dat for j in range(8)]
+            except:
+                ldat = []
+                size = (w, h)
             self.image1 = Image.new('1', size, WHITE)
             self.image1.putdata(ldat)
         else:
