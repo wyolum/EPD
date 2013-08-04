@@ -1,3 +1,4 @@
+import glob
 import time
 import os, sys
 import Tkinter
@@ -17,6 +18,42 @@ EPD_LARGE = (w, h, 2 * w, 2 * h)
 EPD_MED = (w, h, w + 200, h + 96)
 EPD_SMALL = (w, h, w + 128, h + 96)
 HEAD_SHOT = (w + 150, h, 2 * w, h + 126)
+WHITE = 255
+BLACK = 0
+
+#### Callbacks
+def file_open_dialog():
+    out = tkFileDialog.askopenfilename(**file_opt)
+    if out:
+        wif.file_open(out)
+        wif.show()
+def file_save_dialog():
+    # wif = myEqualize(im, contrast_val, brightness_val)
+    fn = tkFileDialog.asksaveasfilename(
+        defaultextension='.png',
+        filetypes=[
+            ('WyoLum Image Format', '.WIF'),
+            ('Portable Network Graphics', '.png')
+            ])
+    if fn:
+        wif.file_save(fn)
+
+def next(step=1):
+    if hasattr(wif, 'fn'):
+        abspath = os.path.abspath(wif.fn)
+        path, fn = os.path.split(abspath)
+    else:
+        path = '.'
+        fn = 'DEFAULT.PNG'
+        abspath = os.path.abspath(os.path.join(path, fn))
+    files = glob.glob(path + '/*.png')
+    files.extend(glob.glob(path + '/*.PNG'))
+    files.extend(glob.glob(path + '/*.WIF'))
+    files.sort()
+    i = files.index(abspath) + step
+    i %= len(files)
+    wif.file_open(files[i])
+    wif.show()
 
 def curry(func, *args, **kw):
     '''
@@ -114,7 +151,25 @@ class WIF:
         self.show()
 
     def file_open(self, fn):
-        self.image1 = Image.open(fn).convert('L')
+        if fn.upper().endswith('.WIF'):
+            ## read in WIF format
+            def bit(val, i): 
+                '''
+                Return the ith bit from byte val
+                '''
+                return ord(val) >> i & 1
+
+            f = open(fn)
+            height, width = struct.unpack('HH', f.read(4))
+            size = (width, height)
+            dat = f.read(height * width // 8)
+            ## turn each byte into 8 pixel values
+            ldat = [(1 - bit(byte, j)) * 255 for byte in dat for j in range(8)]
+            self.image1 = Image.new('1', size, WHITE)
+            self.image1.putdata(ldat)
+        else:
+            ## read in all other formats
+            self.image1 = Image.open(fn).convert('L')
         x, y = self.image1.size
         if x > W or y > H:
             ## rescale to fit
@@ -166,37 +221,26 @@ else:
     wif = WIF(DEFAULT_IMAGE, canvas)
 
 control_frame = Tkinter.Frame(root)
+prev_b = Tkinter.Button(control_frame, text="Prev", command=curry(next, -1))
+prev_b.pack(side=Tkinter.LEFT)
 contrast = Tkinter.Scale(control_frame, from_=-5, to = 5, 
-                         orient=Tkinter.VERTICAL, 
+                         orient=Tkinter.HORIZONTAL, 
                          label='Contrast', 
                          command=wif.set_contrast, 
-                         resolution=.1)
+                         resolution=.01)
 contrast.set(1.)
 contrast.pack(side=Tkinter.LEFT)
 brightness = Tkinter.Scale(control_frame, 
                            from_=0, to = 5, 
-                           orient=Tkinter.VERTICAL, 
+                           orient=Tkinter.HORIZONTAL, 
                            label='Brightness', 
                            command=wif.set_brightness, 
-                           resolution=.1)
+                           resolution=.01)
 brightness.set(1.)
 brightness.pack(side=Tkinter.LEFT)
+next_b = Tkinter.Button(control_frame, text="Next", command=next)
+next_b.pack(side=Tkinter.RIGHT)
 control_frame.pack()
-def file_open_dialog():
-    out = tkFileDialog.askopenfilename(**file_opt)
-    if out:
-        wif.file_open(out)
-        wif.show()
-def file_save_dialog():
-    # wif = myEqualize(im, contrast_val, brightness_val)
-    fn = tkFileDialog.asksaveasfilename(
-        defaultextension='.png',
-        filetypes=[
-            ('WyoLum Image Format', '.WIF'),
-            ('Portable Network Graphics', '.png')
-            ])
-    if fn:
-        wif.file_save(fn)
 
 menubar = Tkinter.Menu(root)
 root.config(menu=menubar)
