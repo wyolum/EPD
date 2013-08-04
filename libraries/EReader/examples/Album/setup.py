@@ -1,5 +1,5 @@
 from distutils.core import setup
-import py2exe, os
+# import py2exe, os
 
 setup(
     data_files = [('', ['DEFAULT.PNG'])],

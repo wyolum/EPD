@@ -1,3 +1,4 @@
+import time
 import os, sys
 import Tkinter
 import tkFileDialog
@@ -11,8 +12,19 @@ h = 176
 W = 3 * w
 H = 3 * h
 file_opt={}
-ACTIVE_REGION = (w, h, 2 * w, 2 * h)
 DEFAULT_IMAGE = 'DEFAULT.PNG'
+EPD_LARGE = (w, h, 2 * w, 2 * h)
+EPD_MED = (w, h, w + 200, h + 96)
+EPD_SMALL = (w, h, w + 128, h + 96)
+HEAD_SHOT = (w + 150, h, 2 * w, h + 126)
+
+def curry(func, *args, **kw):
+    '''
+    function wrapper for use in call back
+    '''
+    def out():
+        func(*args, **kw)
+    return out
 
 def towif(im, outfn, width, height):
     ''' 
@@ -20,6 +32,11 @@ def towif(im, outfn, width, height):
     '''
     f = open(outfn, 'w')
     f.write(struct.pack('HH', height, width))
+    ## faster, but requires numpy download
+    ## np.shape(np.sum([d8[:,:,i] << i for i in range(8)], axis=0))
+    # data = wif.getdata()
+    # for i in range(0, len(data), 8):
+    #     byte = data[i:i + 8]
     for j in range(height):
         for i in range(0, width, 8):
             byte = 0
@@ -31,12 +48,17 @@ def towif(im, outfn, width, height):
                 # sys.stdout.write(' X'[bit])
                 byte |= bit << bit_i
             f.write(struct.pack('B', byte))
-
 class WIF:
     def __init__(self, fn, canvas):
         self.file_open(fn)
         self.canvas = canvas
-        canvas.create_rectangle(ACTIVE_REGION, tags="rect")
+        self.set_area(EPD_LARGE)
+
+    def set_area(self, area):
+        if hasattr(self, 'active_region_id'):
+            self.canvas.delete(self.active_region_id)
+        self.active_region = area
+        self.active_region_id = canvas.create_rectangle(self.active_region, tags="rect")
 
     def equalize(self):
         if self.image1 is not None:
@@ -111,15 +133,17 @@ class WIF:
 
     def file_save(self, fn):
         wif = self.wif.crop([
-                ACTIVE_REGION[0] - self.pos[0],
-                ACTIVE_REGION[1] - self.pos[1],
-                ACTIVE_REGION[2] - self.pos[0],
-                ACTIVE_REGION[3] - self.pos[1]
+                self.active_region[0] - self.pos[0],
+                self.active_region[1] - self.pos[1],
+                self.active_region[2] - self.pos[0],
+                self.active_region[3] - self.pos[1]
                 ])
-        if fn.endswith('.WIF'):
+        if fn.upper().endswith('.WIF'):
             dir, fn = os.path.split(fn)
             fn = os.path.join(dir, fn.upper())
-            towif(wif, fn, W, H)
+            active_w = self.active_region[2] - self.active_region[0]
+            active_h = self.active_region[3] - self.active_region[1]
+            towif(wif, fn, active_w, active_h)
             print 'wrote WIF', fn
         elif fn.lower().endswith('.png'):
             wif.save(fn)
@@ -181,6 +205,13 @@ fileMenu.add_command(label="Open", command=file_open_dialog)
 fileMenu.add_command(label="Save", command=file_save_dialog)
 fileMenu.add_command(label="Exit", command=root.quit)
 menubar.add_cascade(label="File", menu=fileMenu)
+
+optMenu = Tkinter.Menu(menubar)
+optMenu.add_command(label="EPD_LARGE", command=curry(wif.set_area, EPD_LARGE))
+optMenu.add_command(label="EPD_MED", command=curry(wif.set_area, EPD_MED))
+optMenu.add_command(label="EPD_SMALL", command=curry(wif.set_area, EPD_SMALL))
+optMenu.add_command(label="HEAD_SHOT", command=curry(wif.set_area, HEAD_SHOT))
+menubar.add_cascade(label="Options", menu=optMenu)
 
 wif.show()
 root.mainloop()    
