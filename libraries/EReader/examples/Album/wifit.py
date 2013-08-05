@@ -502,7 +502,7 @@ canvas.pack()
 
 
 ment=Tkinter.StringVar()
-text= Text(root,ment)
+text= Text(root, ment)
 
 # main
 import sys
