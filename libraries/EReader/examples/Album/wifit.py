@@ -293,12 +293,13 @@ class WIF:
         self.dragging = False
 
     def drag(self, event):
-        self.dragging = True
-        handler = self.locate_handler(event)
-        dx = event.x - handler.start[0]
-        dy = event.y - handler.start[1]
-        handler.move(dx, dy)
-        handler.start = (event.x, event.y)
+		self.dragging = True
+		handler = self.locate_handler(event)
+		if handler.start[0] is not None:
+			dx = event.x - handler.start[0]
+			dy = event.y - handler.start[1]
+			handler.move(dx, dy)
+			handler.start = (event.x, event.y)
 
     def resize(self, event, subordinate=False):
         handler = self.locate_handler(event)
@@ -468,11 +469,29 @@ class WIF:
             print 'wrote PNG', fn
         else:
             pass
+class Text(WIF):
+	def __init__(self, root,ment):
+		text_entry= Tkinter.Entry(root,textvar=ment)
+		text_entry.pack()
+		button = Tkinter.Button(root, text='Print Text',command = self.activate_button).pack()
+	def activate_button(self):
+		label= Tkinter.Label(root,text="Click to place your text")
+		canvas.create_window(100,100,window=label)
+		canvas.bind("<Button-1>",self.write_text)
+
+		
+	def write_text(self,event):
+			canvas.create_text(event.x,event.y,text=ment.get())
+		
 
 root = Tkinter.Tk()
 root.wm_title('WyoLum Image Format!')
 canvas = Tkinter.Canvas(root, width=W, height=H)
 canvas.pack()
+
+
+ment=Tkinter.StringVar()
+text= Text(root,ment)
 
 # main
 import sys
