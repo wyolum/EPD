@@ -481,19 +481,19 @@ class WIF:
         else:
             pass
 class Text(WIF):
-	def __init__(self, root,ment):
-		text_entry= Tkinter.Entry(root,textvar=ment)
-		text_entry.pack()
-		button = Tkinter.Button(root, text='Print Text',command = self.activate_button).pack()
-	def activate_button(self):
-		label= Tkinter.Label(root,text="Click to place your text")
-		canvas.create_window(100,100,window=label)
-		canvas.bind("<Button-1>",self.write_text)
+    def __init__(self, root, ment):
+        text_entry= Tkinter.Entry(root, textvar=ment)
+        text_entry.pack()
+        button = Tkinter.Button(root, text='Print Text',command=self.activate_button)
+        button.pack()
 
-		
-	def write_text(self,event):
-			canvas.create_text(event.x,event.y,text=ment.get())
-		
+    def activate_button(self):
+        label= Tkinter.Label(root, text="Click to place your text")
+        canvas.create_window(100, 100, window=label)
+        canvas.bind("<Button-1>", self.write_text)
+
+    def write_text(self, event):
+        canvas.create_text(event.x, event.y, text=ment.get())
 
 root = Tkinter.Tk()
 root.wm_title('WyoLum Image Format!')
@@ -536,7 +536,7 @@ contrast = Tkinter.Scale(control_frame, from_=-5, to = 5,
 contrast.set(1.)
 contrast.pack(side=Tkinter.LEFT)
 brightness = Tkinter.Scale(control_frame, 
-                           from_=0, to = 1, 
+                           from_=0, to = 5, 
                            orient=Tkinter.HORIZONTAL, 
                            label='Brightness', 
                            command=background.set_brightness, 
