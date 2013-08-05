@@ -17,18 +17,41 @@ DEFAULT_IMAGE = 'DEFAULT.PNG'
 EPD_LARGE = (w, h, 2 * w, 2 * h)
 EPD_MED = (w, h, w + 200, h + 96)
 EPD_SMALL = (w, h, w + 128, h + 96)
-HEAD_SHOT = (w + 150, h, 2 * w, h + 126)
+HEAD_SHOT = (w + 114, h, 2 * w, h + 126)
 WHITE = 255
 BLACK = 0
+
+default_path = '.'
+
+def intersect_rectangles(bbox1, bbox2):
+    left = max([bbox1[0], bbox2[0]])
+    top = max([bbox1[1], bbox2[1]])
+    right = min([bbox1[2], bbox2[2]])
+    bottom = min([bbox1[3], bbox2[3]])
+    if left >= right or top >= bottom:
+        out = None
+    else:
+        out = [left, top, right, bottom]
+    # id = canvas.create_rectangle(out, fill='blue')
+    # raw_input('...')
+    # canvas.delete(id)
+    return out
 
 #### Callbacks
 def file_open_dialog():
     out = tkFileDialog.askopenfilename(**file_opt)
     if out:
-        wif.file_open(out)
-        wif.show()
+        background.delete_all()
+        foreground = WIF(out, background)
+        foreground.select()
+
+def file_import_dialog():
+    out = tkFileDialog.askopenfilename(**file_opt)
+    if out:
+        foreground = WIF(out, background)
+        foreground.select()
+
 def file_save_dialog():
-    # wif = myEqualize(im, contrast_val, brightness_val)
     fn = tkFileDialog.asksaveasfilename(
         defaultextension='.png',
         filetypes=[
@@ -36,14 +59,15 @@ def file_save_dialog():
             ('Portable Network Graphics', '.png')
             ])
     if fn:
-        wif.file_save(fn)
+        background.file_save(fn)
 
 def next(step=1):
-    if hasattr(wif, 'fn'):
-        abspath = os.path.abspath(wif.fn)
+    current = background.get_current()
+    if hasattr(current, 'fn') and current.fn is not None:
+        abspath = os.path.abspath(current.fn)
         path, fn = os.path.split(abspath)
     else:
-        path = '.'
+        path = default_path
         fn = 'DEFAULT.PNG'
         abspath = os.path.abspath(os.path.join(path, fn))
     files = glob.glob(path + '/*.png')
@@ -51,11 +75,15 @@ def next(step=1):
     files.extend(glob.glob(path + '/*.wif'))
     files.extend(glob.glob(path + '/*.WIF'))
     files.sort()
-    i = files.index(abspath) + step
-    i %= len(files)
-    wif.file_open(files[i])
-    wif.show()
-
+    if abspath in files:
+        i = files.index(abspath) + step
+        i %= len(files)
+    else:
+        i = 0
+    background.delete_all()
+    foreground = WIF(files[i], background)
+    foreground.select()
+    
 def curry(func, *args, **kw):
     '''
     function wrapper for use in call back
@@ -64,10 +92,11 @@ def curry(func, *args, **kw):
         func(*args, **kw)
     return out
 
-def towif(im, outfn, width, height):
+def towif(im, outfn):
     ''' 
     image should be sized already (2.7" display=264x276 pixels) in "1" format
     '''
+    width, height = im.size
     f = open(outfn, 'w')
     f.write(struct.pack('HH', height, width))
     ## faster, but requires numpy download
@@ -86,17 +115,105 @@ def towif(im, outfn, width, height):
                 # sys.stdout.write(' X'[bit])
                 byte |= bit << bit_i
             f.write(struct.pack('B', byte))
+
 class WIF:
-    def __init__(self, fn, canvas):
+    def __init__(self, fn, parent):
         self.file_open(fn)
-        self.canvas = canvas
+        self.parent = parent
         self.set_area(EPD_LARGE)
+        self.children = []
+        if not isinstance(self.parent, Tkinter.Canvas):
+            self.parent.children.insert(0, self) ## put new child on top of stack
+        self.owns_event = False ## keep track of widget that owns a mouse drag
+        self.selected = False   ## select with left mouse no drag
+        self.dragging = False
+        self.contrast = 1.
+        self.brightness = 1.
+    
+    def get_current(self):
+        '''
+        return selected if something is selected else get top if there is a top else return None
+        '''
+        out = self.get_selected()
+        if out is None:
+            if len(self.children) > 0:
+                out = self.children[0]
+        return out
+
+    def get_selected(self):
+        out = None
+        if self.selected:
+            out = self
+        else:
+            for child in self.children:
+                out = child.get_selected()
+                if out:
+                    break
+        return out
+    
+    def z_order_change(self, delta):
+        i = self.parent.children.index(self)
+        self.parent.children.pop(i)
+        if delta > 0:
+            if i - delta > 0:
+                self.parent.children.insert(i - delta, self)
+            else:
+                self.parent.children.insert(0, self)
+        else:
+            n = len(self.parent.children)
+            if i - delta < n:
+                self.parent.children.insert(i - delta, self)
+            else:
+                self.parent.children.insert(n, self)
+        background.show()
+
+    def z_order_push(self):
+        self.z_order_change(-1)
+
+    def z_order_pull(self):
+        self.z_order_change(1)
+    
+    def z_order_top(self):
+        self.parent.children.remove(self)
+        self.parent.children.insert(0, self)
+        background.show()
+
+    def z_order_bottom(self):
+        self.parent.children.remove(self)
+        n = len(self.parent.children)
+        self.parent.children.insert(n, self)
+        background.show()
+
+    def select(self):
+        background.unselect()
+        self.selected = True
+        contrast.set(self.contrast)
+        brightness.set(self.brightness)
+        background.show()
+
+    def unselect(self):
+        self.selected = False
+        self.canvas.delete("highlight")
+        for child in self.children:
+            child.unselect()
+
+    def contains(self, x, y):
+        out = self.bbox[0] < x and x < self.bbox[2]
+        out *= self.bbox[1] < y and y < self.bbox[3]
+        return out
+
+    def getCanvas(self):
+        if isinstance(self.parent, Tkinter.Canvas):
+            out = self.parent
+        else:
+            out = self.parent.getCanvas()
+        return out
+    canvas = property(getCanvas)
 
     def set_area(self, area):
-        if hasattr(self, 'active_region_id'):
-            self.canvas.delete(self.active_region_id)
+        self.canvas.delete("active")
         self.active_region = area
-        self.active_region_id = canvas.create_rectangle(self.active_region, tags="rect")
+        self.active_region_id = canvas.create_rectangle(self.active_region, tags=("rect", "active"))
 
     def equalize(self):
         if self.image1 is not None:
@@ -108,52 +225,166 @@ class WIF:
                                   int(image.size[1] * self.scale)))
             self.wif = image.convert('1')
 
-    def show(self):
+    def show(self, subordinate=False):
         self.equalize()
         if self.id is not None:
             self.canvas.delete(self.id)
         self.wiftk = ImageTk.PhotoImage(self.wif)
         x, y = self.wif.size
-        self.id = self.canvas.create_image([self.pos[0] + x/2.,
-                                            self.pos[1] + y/2.], 
+        self.id = self.canvas.create_image([self.pos[0] + x / 2.,
+                                            self.pos[1] + y / 2.], 
                                            image=self.wiftk, 
                                            tags="image")
-        self.canvas.bind('<Button>', self.down)
-        self.canvas.bind('<B1-Motion>', self.drag)
-        self.canvas.bind('<B3-Motion>', self.resize)
-        self.canvas.bind('<ButtonRelease-3>', self.save_scale)
-        self.canvas.tag_raise("rect")
-        root.wm_title('WyoLum Image Format!   ' + os.path.split(self.fn)[-1])
+        self.bbox = [self.pos[0], self.pos[1], self.pos[0] + x, self.pos[1] + y]
+        if self.selected:
+            self.canvas.delete("highlight")
+            self.highlight_id = self.canvas.create_rectangle((self.bbox[0] - 1,
+                                                              self.bbox[1] - 1,
+                                                              self.bbox[2] + 1,
+                                                              self.bbox[3] + 1), 
+                                                             tags=["highlight", "rect"],
+                                                             outline='blue')
+        for child in self.children[::-1]:
+            child.show(subordinate=True)
+        
+        if not subordinate:
+            self.canvas.tag_raise("rect")
+            title = 'WyoLum Image Format!   '
+            if self.fn is not None:
+                title = title + os.path.split(self.fn)[-1]
+            root.wm_title(title)
 
-    def down(self, event):
-        self.start = (event.x, event.y)
+    def move(self, dx, dy):
+        if self != background:
+            self.pos = (self.pos[0] + dx, self.pos[1] + dy)
+            self.canvas.move(self.id, dx, dy)
+            self.bbox[0] += dx
+            self.bbox[2] += dx
+            self.bbox[1] += dy
+            self.bbox[3] += dy
+            ## lock children?
+            # for child in self.children:
+            #     child.move(dx, dy)
+            if self.selected:
+                self.canvas.move(self.highlight_id, dx, dy)
+    def locate_handler(self, event):
+        for child in self.children:
+            if child.owns_event:
+                out = child
+                break
+        else:
+            if self.owns_event:
+                out = self
+            else:
+                for child in self.children:
+                    if child.contains(event.x, event.y):
+                        out = child
+                        break
+                else:
+                    out = self
+        return out
+
+    def button_down(self, event):
+        handler = self.locate_handler(event)
+        handler.start = (event.x, event.y)
+        handler.owns_event = True
+        if handler != background:
+            handler.select()
+        self.dragging = False
 
     def drag(self, event):
-        dx = event.x - self.start[0]
-        dy = event.y - self.start[1]
-        self.pos = (self.pos[0] + dx, self.pos[1] + dy)
-        self.canvas.move(self.id, 
-                         dx, 
-                         dy)
-        self.start = (event.x, event.y)
+        self.dragging = True
+        handler = self.locate_handler(event)
+        dx = event.x - handler.start[0]
+        dy = event.y - handler.start[1]
+        handler.move(dx, dy)
+        handler.start = (event.x, event.y)
 
-    def resize(self, event):
-        self.scale = self.sscale + (event.x - self.start[0]) / float(W)
-        self.show()
+    def resize(self, event, subordinate=False):
+        handler = self.locate_handler(event)
+        if handler != background:
+            handler.dragging = False
+            if handler.start[0] is None:
+                handler.button_down(event)
+            handler.scale = handler.sscale + (event.x - handler.start[0]) / float(W)
+            handler.bbox[2] = handler.bbox[0] + handler.scale * (handler.bbox[2] - handler.bbox[0])
+            handler.bbox[3] = handler.bbox[1] + handler.scale * (handler.bbox[3] - handler.bbox[1])
+            handler.show(subordinate=subordinate)
+
+    def release_event(self, event):
+        handler = self.locate_handler(event)
+        handler.owns_event = False
+        if not handler.dragging: ## must have been a click
+            ## unselect all
+            background.unselect()
+            handler.selected = True
+            background.show()
+        else:
+            self.selected = False
 
     def save_scale(self, event):
-        self.sscale = self.scale
+        handler = self.locate_handler(event)
+        handler.sscale = handler.scale
+        for child in handler.children:
+            child.sscale = child.scale
+        handler.owns_event = False
+
+    def delete_selected(self, event):
+        child = self.get_selected()
+        if child is not None:
+            self.children.remove(child)
+
+    def delete_all(self, event=None):
+        for child in self.children:
+            self.children.remove(child)
+        del self.children
+        self.children = []
+    def push_selected(self, event):
+        child = self.get_selected()
+        if child is not None:
+            child.z_order_push()
+
+    def pull_selected(self, event):
+        child = self.get_selected()
+        if child is not None:
+            child.z_order_pull()
+
+    def top_selected(self, event):
+        child = self.get_selected()
+        if child is not None:
+            child.z_order_top()
+        
+    def bottom_selected(self, event):
+        child = self.get_selected()
+        if child is not None:
+            child.z_order_bottom()
+        
+    def __del__(self):
+        try:
+            self.canvas.delete(self.highlight_id)
+            self.canvas.delete(self.id)
+        except:
+            pass
+
 
     def set_contrast(self, contrast_val):
-        self.contrast = float(contrast_val)
-        self.show()
+        select = self.get_selected()
+        if select:
+            select.contrast = float(contrast_val)
+            background.show()
 
     def set_brightness(self, brightness_val):
-        self.brightness = float(brightness_val)
-        self.show()
+        select = self.get_selected()
+        if select:
+            select.brightness = float(brightness_val)
+            background.show()
 
     def file_open(self, fn):
-        if fn.upper().endswith('.WIF'):
+        global default_path
+        if fn is None:
+            ## background image (all white)
+            self.image1 = Image.new('1', (W + 2, H + 2), WHITE)
+        elif fn.upper().endswith('.WIF'):
             ## read in WIF format
             def bit(val, i): 
                 '''
@@ -191,28 +422,53 @@ class WIF:
         self.brightness = 1.
         self.id = None
         self.start = (None, None)
+        if fn:
+            path, fn = os.path.split(fn)
+            default_path = os.path.abspath(path)
+    def copy_active_region(self):
+        x, y = self.wif.size
+        bbox = intersect_rectangles(self.active_region, (self.pos[0],
+                                                         self.pos[1],
+                                                         self.pos[0] + x,
+                                                         self.pos[1] + y))
+        if bbox is not None:
+            out = self.wif.crop([
+                    # self.active_region[0] - self.pos[0],
+                    # self.active_region[1] - self.pos[1],
+                    # self.active_region[2] - self.pos[0],
+                    # self.active_region[3] - self.pos[1]
+                    bbox[0] - self.pos[0],
+                    bbox[1] - self.pos[1],
+                    bbox[2] - self.pos[0],
+                    bbox[3] - self.pos[1]
+                    ])
+                ### copy sub to out
+        else:
+            out = None
+            bbox = None
+        return out, bbox
 
     def file_save(self, fn):
-        wif = self.wif.crop([
-                self.active_region[0] - self.pos[0],
-                self.active_region[1] - self.pos[1],
-                self.active_region[2] - self.pos[0],
-                self.active_region[3] - self.pos[1]
-                ])
+        im, my_bbox = self.copy_active_region()
+        for c in self.children[::-1]:
+            ar, c_bbox = c.copy_active_region()
+            if ar:
+                # canvas.create_rectangle(my_bbox,fill='red')
+                # canvas.create_rectangle(c_bbox,fill='blue')
+                im.paste(ar, 
+                          (max([c_bbox[0] - my_bbox[0], 0]),
+                           max([c_bbox[1] - my_bbox[1], 0])))
         if fn.upper().endswith('.WIF'):
             dir, fn = os.path.split(fn)
             fn = os.path.join(dir, fn.upper())
-            active_w = self.active_region[2] - self.active_region[0]
-            active_h = self.active_region[3] - self.active_region[1]
-            towif(wif, fn, active_w, active_h)
+            towif(im, fn)
             print 'wrote WIF', fn
         elif fn.lower().endswith('.png'):
-            wif.save(fn)
+            im.save(fn)
             print 'wrote PNG', fn
         else:
             pass
-    def save(self, event):
-        pass
+
 root = Tkinter.Tk()
 root.wm_title('WyoLum Image Format!')
 canvas = Tkinter.Canvas(root, width=W, height=H)
@@ -220,11 +476,24 @@ canvas.pack()
 
 # main
 import sys
+background = WIF(None, canvas)
 if len(sys.argv) > 1:
     fn = sys.argv[1]
-    wif = WIF(fn, canvas)
+    WIF(fn, background)
 else:
-    wif = WIF(DEFAULT_IMAGE, canvas)
+    WIF(DEFAULT_IMAGE, background)
+
+# foreground = WIF('WYO.WIF', background)
+canvas.bind('<Button>', background.button_down)
+canvas.bind('<B1-Motion>', background.drag)
+canvas.bind('<B3-Motion>', background.resize)
+canvas.bind('<ButtonRelease-1>', background.release_event)
+canvas.bind('<ButtonRelease-3>', background.save_scale)
+root.bind('<Delete>', background.delete_selected)
+root.bind('<Prior>', background.pull_selected) ## page up
+root.bind('<Next>', background.push_selected)  ## page down
+root.bind('<Home>', background.top_selected)
+root.bind('<End>', background.bottom_selected)
 
 control_frame = Tkinter.Frame(root)
 prev_b = Tkinter.Button(control_frame, text="Prev", command=curry(next, -1))
@@ -232,7 +501,7 @@ prev_b.pack(side=Tkinter.LEFT)
 contrast = Tkinter.Scale(control_frame, from_=-5, to = 5, 
                          orient=Tkinter.HORIZONTAL, 
                          label='Contrast', 
-                         command=wif.set_contrast, 
+                         command=background.set_contrast, 
                          resolution=.01)
 contrast.set(1.)
 contrast.pack(side=Tkinter.LEFT)
@@ -240,7 +509,7 @@ brightness = Tkinter.Scale(control_frame,
                            from_=0, to = 5, 
                            orient=Tkinter.HORIZONTAL, 
                            label='Brightness', 
-                           command=wif.set_brightness, 
+                           command=background.set_brightness, 
                            resolution=.01)
 brightness.set(1.)
 brightness.pack(side=Tkinter.LEFT)
@@ -252,17 +521,18 @@ menubar = Tkinter.Menu(root)
 root.config(menu=menubar)
 fileMenu = Tkinter.Menu(menubar)
 fileMenu.add_command(label="Open", command=file_open_dialog)
+fileMenu.add_command(label="Import", command=file_import_dialog)
 fileMenu.add_command(label="Save", command=file_save_dialog)
 fileMenu.add_command(label="Exit", command=root.quit)
 menubar.add_cascade(label="File", menu=fileMenu)
 
 optMenu = Tkinter.Menu(menubar)
-optMenu.add_command(label="EPD_LARGE", command=curry(wif.set_area, EPD_LARGE))
-optMenu.add_command(label="EPD_MED", command=curry(wif.set_area, EPD_MED))
-optMenu.add_command(label="EPD_SMALL", command=curry(wif.set_area, EPD_SMALL))
-optMenu.add_command(label="HEAD_SHOT", command=curry(wif.set_area, HEAD_SHOT))
+optMenu.add_command(label="EPD_LARGE", command=curry(background.set_area, EPD_LARGE))
+optMenu.add_command(label="EPD_MED", command=curry(background.set_area, EPD_MED))
+optMenu.add_command(label="EPD_SMALL", command=curry(background.set_area, EPD_SMALL))
+optMenu.add_command(label="HEAD_SHOT", command=curry(background.set_area, HEAD_SHOT))
 menubar.add_cascade(label="Options", menu=optMenu)
 
-wif.show()
+background.show()
 root.mainloop()    
 
