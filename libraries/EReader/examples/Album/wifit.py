@@ -120,7 +120,6 @@ class WIF:
     def __init__(self, fn, parent):
         self.file_open(fn)
         self.parent = parent
-        self.set_area(EPD_LARGE)
         self.children = []
         if not isinstance(self.parent, Tkinter.Canvas):
             self.parent.children.insert(0, self) ## put new child on top of stack
@@ -129,7 +128,7 @@ class WIF:
         self.dragging = False
         self.contrast = 1.
         self.brightness = 1.
-    
+
     def get_current(self):
         '''
         return selected if something is selected else get top if there is a top else return None
@@ -413,6 +412,18 @@ class WIF:
             scale = min([ W / float(x), H / float(y) ])
             self.scale = scale
             self.pos = (0, 0)
+        elif ((HEAD_SHOT[2] - HEAD_SHOT[0] == x) and
+              (HEAD_SHOT[3] - HEAD_SHOT[1] == y)):
+            self.scale = 1.
+            self.pos = HEAD_SHOT[:2]
+        elif ((EPD_MED[2] - EPD_MED[0] == x) and
+              (EPD_MED[3] - EPD_MED[1] == y)):
+            self.scale = 1.
+            self.pos = EPD_MED[:2]
+        elif ((EPD_SMALL[2] - EPD_SMALL[0] == x) and
+              (EPD_SMALL[3] - EPD_SMALL[1] == y)):
+            self.scale = 1.
+            self.pos = EPD_SMALL[:2]
         else:
             self.scale = 1.
             self.pos = ((W - x)/2, (H - y)/2)
@@ -427,7 +438,7 @@ class WIF:
             default_path = os.path.abspath(path)
     def copy_active_region(self):
         x, y = self.wif.size
-        bbox = intersect_rectangles(self.active_region, (self.pos[0],
+        bbox = intersect_rectangles(background.active_region, (self.pos[0],
                                                          self.pos[1],
                                                          self.pos[0] + x,
                                                          self.pos[1] + y))
@@ -478,8 +489,8 @@ canvas.pack()
 import sys
 background = WIF(None, canvas)
 if len(sys.argv) > 1:
-    fn = sys.argv[1]
-    WIF(fn, background)
+    for fn in sys.argv[1:]:
+        WIF(fn, background)
 else:
     WIF(DEFAULT_IMAGE, background)
 
@@ -502,15 +513,15 @@ contrast = Tkinter.Scale(control_frame, from_=-5, to = 5,
                          orient=Tkinter.HORIZONTAL, 
                          label='Contrast', 
                          command=background.set_contrast, 
-                         resolution=.01)
+                         resolution=.1)
 contrast.set(1.)
 contrast.pack(side=Tkinter.LEFT)
 brightness = Tkinter.Scale(control_frame, 
-                           from_=0, to = 5, 
+                           from_=0, to = 1, 
                            orient=Tkinter.HORIZONTAL, 
                            label='Brightness', 
                            command=background.set_brightness, 
-                           resolution=.01)
+                           resolution=.1)
 brightness.set(1.)
 brightness.pack(side=Tkinter.LEFT)
 next_b = Tkinter.Button(control_frame, text="Next", command=next)
@@ -532,7 +543,7 @@ optMenu.add_command(label="EPD_MED", command=curry(background.set_area, EPD_MED)
 optMenu.add_command(label="EPD_SMALL", command=curry(background.set_area, EPD_SMALL))
 optMenu.add_command(label="HEAD_SHOT", command=curry(background.set_area, HEAD_SHOT))
 menubar.add_cascade(label="Options", menu=optMenu)
-
+background.set_area(EPD_LARGE)
 background.show()
 root.mainloop()    
 
