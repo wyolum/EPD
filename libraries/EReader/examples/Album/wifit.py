@@ -145,9 +145,12 @@ class WIF:
         if not out:
             ## event is not handled.  see if it is an vi edit command
             if event.char == 'i':
-                wtext = WText(self, '', unifont_f=False)
+                wtext = WText(self, '', unifont_f=True, bigascii=False)
             elif event.char == 'I':
                 wtext = WText(self, '', unifont_f=True, bigascii=True)
+            elif event.char == 'T':
+                wtext = WText(self, '', unifont_f=False)
+
         return out
 
     def get_current(self):
@@ -327,7 +330,17 @@ class WIF:
             handler.dragging = False
             if handler.start[0] is None:
                 handler.button_down(event)
-            handler.scale = handler.sscale + (event.x - handler.start[0]) / float(W)
+            if False:
+                x0 = handler.bbox[0]
+                x1minus = handler.bbox[2]
+                delta_x = event.x - handler.start[0]
+                x1plus = x1minus + delta_x
+                if (x1minus == x0):
+                    handler.scale = 0
+                else:
+                    handler.scale = float(x1plus - x0) / (x1minus - x0)
+            else:
+                handler.scale = handler.sscale + (event.x - handler.start[0]) / float(W)
             handler.bbox[2] = handler.bbox[0] + handler.scale * (handler.bbox[2] - handler.bbox[0])
             handler.bbox[3] = handler.bbox[1] + handler.scale * (handler.bbox[3] - handler.bbox[1])
             handler.show(subordinate=subordinate)
@@ -357,6 +370,9 @@ class WIF:
             self.children.remove(child)
 
     def delete(self):
+        self.unselect()
+        self.canvas.delete(self.id)
+
         try:
             self.canvas.delete(self.highlight_id)
             self.canvas.delete(self.id)
@@ -515,11 +531,6 @@ class WText(WIF):
         self.layout_text()
         self.cursor = len(self.text)
         self.select()
-
-    def delete(self):
-        WIF.delete(self)
-        self.unselect()
-        self.canvas.delete(self.id)
 
     def layout_text(self):
         '''
