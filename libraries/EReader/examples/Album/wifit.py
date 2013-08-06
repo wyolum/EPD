@@ -610,7 +610,7 @@ contrast = Tkinter.Scale(control_frame, from_=-5, to = 5,
                          orient=Tkinter.HORIZONTAL, 
                          label='Contrast', 
                          command=background.set_contrast, 
-                         resolution=.1)
+                         resolution=.01)
 contrast.set(1.)
 contrast.pack(side=Tkinter.LEFT)
 brightness = Tkinter.Scale(control_frame, 
@@ -618,7 +618,7 @@ brightness = Tkinter.Scale(control_frame,
                            orient=Tkinter.HORIZONTAL, 
                            label='Brightness', 
                            command=background.set_brightness, 
-                           resolution=.1)
+                           resolution=.01)
 brightness.set(1.)
 brightness.pack(side=Tkinter.LEFT)
 next_b = Tkinter.Button(control_frame, text="Next", command=next)
