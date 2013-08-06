@@ -1,3 +1,5 @@
+import ascii_5x7
+import unifont
 import glob
 import time
 import os, sys
@@ -20,6 +22,12 @@ EPD_SMALL = (w, h, w + 128, h + 96)
 HEAD_SHOT = (w + 112, h, 2 * w, h + 126)
 WHITE = 255
 BLACK = 0
+BACKSPACE = chr(8)
+RETURN = chr(13)
+ESC = chr(27)
+LEFT_KC = 113
+RIGHT_KC = 114
+
 
 default_path = '.'
 
@@ -117,8 +125,8 @@ def towif(im, outfn):
             f.write(struct.pack('B', byte))
 
 class WIF:
-    def __init__(self, fn, parent):
-        self.file_open(fn)
+    def __init__(self, fn, parent, size=None):
+        self.init_image(fn, size=size)
         self.parent = parent
         self.children = []
         if not isinstance(self.parent, Tkinter.Canvas):
@@ -128,6 +136,19 @@ class WIF:
         self.dragging = False
         self.contrast = 1.
         self.brightness = 1.
+    
+    def key_event(self, event):
+        out = False
+        child = self.get_selected()
+        if child is not None and child != self: ## prevent infinite loops
+            out = child.key_event(event)
+        if not out:
+            ## event is not handled.  see if it is an vi edit command
+            if event.char == 'i':
+                wtext = WText(self, '', unifont_f=False)
+            elif event.char == 'I':
+                wtext = WText(self, '', unifont_f=True, bigascii=True)
+        return out
 
     def get_current(self):
         '''
@@ -317,7 +338,7 @@ class WIF:
         if not handler.dragging: ## must have been a click
             ## unselect all
             background.unselect()
-            handler.selected = True
+            handler.select()
             background.show()
         else:
             self.selected = False
@@ -332,10 +353,20 @@ class WIF:
     def delete_selected(self, event):
         child = self.get_selected()
         if child is not None:
+            child.delete()
             self.children.remove(child)
+
+    def delete(self):
+        try:
+            self.canvas.delete(self.highlight_id)
+            self.canvas.delete(self.id)
+            background.show()
+        except:
+            pass
 
     def delete_all(self, event=None):
         for child in self.children:
+            child.delete()
             self.children.remove(child)
         del self.children
         self.children = []
@@ -358,14 +389,6 @@ class WIF:
         child = self.get_selected()
         if child is not None:
             child.z_order_bottom()
-        
-    def __del__(self):
-        try:
-            self.canvas.delete(self.highlight_id)
-            self.canvas.delete(self.id)
-        except:
-            pass
-
 
     def set_contrast(self, contrast_val):
         select = self.get_selected()
@@ -379,11 +402,13 @@ class WIF:
             select.brightness = float(brightness_val)
             background.show()
 
-    def file_open(self, fn):
+    def init_image(self, fn, size=None):
         global default_path
         if fn is None:
+            if size is None: ## default to full screen
+                size = (W + 2, H + 2)
             ## background image (all white)
-            self.image1 = Image.new('1', (W + 2, H + 2), WHITE)
+            self.image1 = Image.new('1', size, WHITE)
         elif fn.upper().endswith('.WIF'):
             ## read in WIF format
             def bit(val, i): 
@@ -479,30 +504,81 @@ class WIF:
             im.save(fn)
             print 'wrote PNG', fn
         else:
-            pass
-class Text(WIF):
-    def __init__(self, root, ment):
-        text_entry= Tkinter.Entry(root, textvar=ment)
-        text_entry.pack()
-        button = Tkinter.Button(root, text='Print Text',command=self.activate_button)
-        button.pack()
+            pass 
 
-    def activate_button(self):
-        label= Tkinter.Label(root, text="Click to place your text")
-        canvas.create_window(100, 100, window=label)
-        canvas.bind("<Button-1>", self.write_text)
+class WText(WIF):
+    def __init__(self, parent, text='', unifont_f=True, bigascii=False):
+        self.text=text
+        self.unifont_f = unifont_f
+        self.bigascii = bigascii ## needed for self.size
+        WIF.__init__(self, fn=None, parent=parent, size=self.size)
+        self.layout_text()
+        self.cursor = len(self.text)
+        self.select()
 
-    def write_text(self, event):
-        canvas.create_text(event.x, event.y, text=ment.get())
+    def delete(self):
+        WIF.delete(self)
+        self.unselect()
+        self.canvas.delete(self.id)
 
+    def layout_text(self):
+        '''
+        Put the text on the image.  Does not resize image1
+        '''
+        if self.unifont_f:
+            unifont.addText(self.text, self.image1, 0, 0, self.bigascii)
+        else: ## default to 5x7 font
+            ascii_5x7.addText(self.text, self.image1, 0, 0)
+
+    def insert(self, text, index=None):
+        if index is not None:
+            self.cursor = index
+        self.text = self.text[:self.cursor] + text + self.text[self.cursor:]
+        self.cursor += len(text)
+        self.canvas.delete(self.id) ## delete old image
+        self.image1 = Image.new('1', self.size, WHITE)
+        self.layout_text()
+        background.show()
+
+    def get_size(self):
+        if self.unifont_f:
+            size = unifont.calcsize(self.text, bigascii=self.bigascii)
+        else: ## default to 5x7 font
+            size = ascii_5x7.calcsize(self.text)
+        if size[0] == 0:
+            size = (1, size[1])
+        return size
+    size = property(get_size)
+    
+    def backspace(self):
+        if self.cursor > 0:
+            self.text = self.text[:self.cursor - 1] + self.text[self.cursor:]
+            self.canvas.delete(self.id) ## delete old image
+            self.image1 = Image.new('1', self.size, WHITE)
+            self.layout_text()
+            background.show()
+            self.cursor -= 1
+    def key_event(self, event):
+        char = event.char
+        if event.keycode == LEFT_KC:
+            if self.cursor > 0:
+                self.cursor -= 1
+        elif event.keycode == RIGHT_KC:
+            if self.cursor < len(self.text):
+                self.cursor += 1
+        elif char == BACKSPACE:
+            self.backspace()
+        elif char == RETURN or char == ESC:
+            self.unselect()
+        else:
+            self.insert(char, self.cursor)
+        return True
+    
 root = Tkinter.Tk()
 root.wm_title('WyoLum Image Format!')
 canvas = Tkinter.Canvas(root, width=W, height=H)
 canvas.pack()
 
-
-ment=Tkinter.StringVar()
-text= Text(root, ment)
 
 # main
 import sys
@@ -519,11 +595,13 @@ canvas.bind('<B1-Motion>', background.drag)
 canvas.bind('<B3-Motion>', background.resize)
 canvas.bind('<ButtonRelease-1>', background.release_event)
 canvas.bind('<ButtonRelease-3>', background.save_scale)
+root.bind('<Key>', background.key_event)
 root.bind('<Delete>', background.delete_selected)
 root.bind('<Prior>', background.pull_selected) ## page up
 root.bind('<Next>', background.push_selected)  ## page down
 root.bind('<Home>', background.top_selected)
 root.bind('<End>', background.bottom_selected)
+
 
 control_frame = Tkinter.Frame(root)
 prev_b = Tkinter.Button(control_frame, text="Prev", command=curry(next, -1))

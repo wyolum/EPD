@@ -32,7 +32,7 @@ class WIF:
         self.im.paste(img, box)
 
     def addUnifont(self, txt, x, y, **kw):
-        unifont.addText(txt, self.wff_file, self.im, x, y, **kw)
+        unifont.addText(txt, self.im, x, y, self.wff_file, **kw)
 
     def add_7x5_txt(self, txt, x, y, **kw):
         ascii_5x7.addText(txt, self.im, x, y, **kw)

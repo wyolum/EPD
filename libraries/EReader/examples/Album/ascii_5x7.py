@@ -1557,9 +1557,13 @@ def paste_char(im, c, x, y):
     im.paste(ch, (x, y))
     return 6
 
+def calcsize(text):
+    return 6 * len(text), 7
+
 def addText(text, im, x, y):
     for c in text:
         x += paste_char(im, c, x, y)
+
 def addText__test__():
     im = Im.new('1', (264, 175), 255)
     addText('JUSTIN', im, 0, 0)

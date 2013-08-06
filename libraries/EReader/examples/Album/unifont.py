@@ -4,7 +4,8 @@ import struct
 
 REC_LEN = 33
 BLANK = '0' * 32
-
+UNIFONT_FN = 'unifont.wff'
+UNIFONT_FILE = open(UNIFONT_FN)
 
 def _bits(num):
     return [num >> i & 1 for i in range(8)]
@@ -100,7 +101,7 @@ def check_index(f, wff_filename='unifont.index'):
         # assert i == int(unic, 16), 'off in line %x' % i
 
 
-def create_wff(out_filename='unifont.wff'):
+def create_wff(out_filename=UNIFONT_FN):
     '''
     create a font file with each char the same taking up the same size: REC_LEN byes.
     '''
@@ -155,7 +156,7 @@ def paste_char(wff_file, img, unic, x, y):
     img.paste(im, (x, y))
     return dat.shape[1]
 
-def check_wff(wff_filename='unifont.wff'):
+def check_wff(wff_filename=UNIFONT_FN):
     wff_file = open(wff_filename)
     # bigIm = Im.new('RGBA', (260 * 16, 260 * 16), (255, 255, 255, 255)) ## was
     bigIm = Im.new('1', (260 * 16, 260 * 16), 255)
@@ -177,24 +178,36 @@ def check_wff(wff_filename='unifont.wff'):
     bigIm.save('unifont.jpg')
     print 'wrote unifont.jpg'
 # check_wff() ## only call once
+BIGTEXT_OFFSET = 0xfee0
+def calcsize(text, bigascii=False, wff_file=UNIFONT_FILE):
+    if bigascii:
+        utxt = ''.join([unichr(ord(c) + BIGTEXT_OFFSET) for c in text])
+        x, y = calcsize(utxt, bigascii=False, wff_file=wff_file)
+    else:
+        x = 0
+        y = 16
+        for unic in text:
+            dat = to_array(wff_file, ord(unic))
+            x += dat.shape[1]
+    return x, y
 
-def addText(text, wff_file, im, x, y, bigascii=False):
+def addText(text, im, x, y, bigascii=False, wff_file=UNIFONT_FILE):
     '''
     paste an image of text into im at position x, y.
     if bigascii == True, then use large chars near end of UNIFONT file
     '''
     if bigascii:
-        utxt = ''.join([unichr(ord(c) + 0xfee0) for c in text])
-        addText(utxt, wff_file, im, x, y, bigascii=False)
+        utxt = ''.join([unichr(ord(c) + BIGTEXT_OFFSET) for c in text])
+        addText(utxt, im, x, y, bigascii=False, wff_file=wff_file)
     else:
         for unic in text:
             x += paste_char(wff_file, im, ord(unic), x, y)
 
 def addText__test__():
-    wff_file = open('unifont.wff')
+    wff_file = open(UNIFONT_FN)
     im = Im.new('1', (264, 175), 255)
-    addText('JUSTIN', wff_file, im, 0, 0)
+    addText('JUSTIN', im, 0, 0, wff_file)
     txt = 'Justin'
-    addText(txt, wff_file, im, 0, 20, bigascii=True)
+    addText(txt, im, 0, 20, bigascii=True, wff_file=UNIFONT_FILE)
     im.show()
 # addText__test__()
