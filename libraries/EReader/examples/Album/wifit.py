@@ -175,13 +175,13 @@ class WIF:
         if not out:
             ## event is not handled.  see if it is an vi edit command
             if event.char == 'i':
-                wtext = WText(self, '', unifont_f=True, bigascii=False)
+                wtext = WText(background, '', unifont_f=True, bigascii=False)
                 out = True
             elif event.char == 'I':
-                wtext = WText(self, '', unifont_f=True, bigascii=True)
+                wtext = WText(background, '', unifont_f=True, bigascii=True)
                 out = True
             elif event.char == 'T':
-                wtext = WText(self, '', unifont_f=False)
+                wtext = WText(background, '', unifont_f=False)
                 out = True
         return out
 
@@ -351,16 +351,16 @@ class WIF:
         handler.owns_event = True
         if handler != background:
             handler.select()
-        self.dragging = False
+        handler.dragging = False
 
     def drag(self, event):
-		self.dragging = True
-		handler = self.locate_handler(event)
-		if handler.start[0] is not None:
-			dx = event.x - handler.start[0]
-			dy = event.y - handler.start[1]
-			handler.move(dx, dy)
-			handler.start = (event.x, event.y)
+        self.dragging = True
+        handler = self.locate_handler(event)
+        if handler.start[0] is not None:
+            dx = event.x - handler.start[0]
+            dy = event.y - handler.start[1]
+            handler.move(dx, dy)
+            handler.start = (event.x, event.y)
 
     def resize(self, event, subordinate=False):
         handler = self.locate_handler(event)
@@ -676,6 +676,13 @@ if len(sys.argv) > 1:
 else:
     WIF(DEFAULT_IMAGE, background)
 
+def printstack(*args, **kw):
+    print background
+    for child in background.children:
+        print '  ', child
+        for gc in child.children:
+            print '    ', gc
+    print
 # foreground = WIF('WYO.WIF', background)
 canvas.bind('<Button>', background.button_down)
 canvas.bind('<B1-Motion>', background.drag)
@@ -684,6 +691,7 @@ canvas.bind('<ButtonRelease-1>', background.release_event)
 canvas.bind('<ButtonRelease-3>', background.save_scale)
 root.bind('<Control-c>', background.ctrl_c)
 root.bind('<Control-v>', background.ctrl_v)
+root.bind('<Control-a>', printstack)
 root.bind('<Key>', background.key_event)
 root.bind('<Delete>', background.delete_selected)
 root.bind('<Prior>', background.pull_selected) ## page up
