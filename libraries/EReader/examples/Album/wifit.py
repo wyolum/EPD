@@ -31,7 +31,7 @@ RETURN = chr(13)
 ESC = chr(27)
 LEFT_KC = 113
 RIGHT_KC = 114
-
+current_event = None
 
 default_path = '.'
 
@@ -346,6 +346,8 @@ class WIF:
         return out
 
     def button_down(self, event):
+        global current_event
+        current_event = event
         handler = self.locate_handler(event)
         handler.start = (event.x, event.y)
         handler.owns_event = True
@@ -598,6 +600,9 @@ class WText(WIF):
         self.unifont_f = unifont_f
         self.bigascii = bigascii ## needed for self.size
         WIF.__init__(self, fn=None, parent=parent, size=self.size)
+        print current_event
+        if current_event is not None:
+            self.pos = current_event.x, current_event.y
         self.layout_text()
         self.cursor = len(self.text)
         self.select()
@@ -653,7 +658,11 @@ class WText(WIF):
         elif char == BACKSPACE:
             self.backspace()
             out = True
-        elif char == RETURN or char == ESC:
+        elif char == RETURN:
+            current_event.y += self.size[1]
+            self.unselect()
+            out = True
+        elif char == ESC:
             self.unselect()
             out = True
         else:
