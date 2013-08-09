@@ -1,3 +1,7 @@
+import tempfile
+import json
+import StringIO
+import urllib2
 import ascii_5x7
 import unifont
 import glob
@@ -61,7 +65,7 @@ def file_import_dialog():
 
 def file_save_dialog():
     fn = tkFileDialog.asksaveasfilename(
-        defaultextension='.png',
+        defaultextension='.WIF',
         filetypes=[
             ('WyoLum Image Format', '.WIF'),
             ('Portable Network Graphics', '.png')
@@ -126,6 +130,8 @@ def towif(im, outfn):
 
 class WIF:
     def __init__(self, fn, parent, size=None):
+        self.contrast = 1.
+        self.brightness = 1.
         self.init_image(fn, size=size)
         self.parent = parent
         self.children = []
@@ -134,9 +140,33 @@ class WIF:
         self.owns_event = False ## keep track of widget that owns a mouse drag
         self.selected = False   ## select with left mouse no drag
         self.dragging = False
-        self.contrast = 1.
-        self.brightness = 1.
     
+    def ctrl_c(self, event):
+        global tempf
+        child = self.get_selected()
+        if child is not None:
+            root.tempf = tempfile.TemporaryFile()
+            child.image1.save(root.tempf, 'png')
+            dump = json.dumps([{'contrast':child.contrast, 
+                                'brightness':child.brightness, 
+                                'sscale':child.sscale, 
+                                'pos':(child.pos[0], child.pos[1])}])
+            paste = 'copy://' + dump
+            root.clipboard_clear()
+            root.clipboard_append(paste)
+
+    def ctrl_v(self, event):
+        global current_event
+        current_event = event
+        try:
+            path = root.clipboard_get()
+            foreground = WIF(path, self)
+            foreground.select()
+            foreground.show()
+        except Exception, e:
+            print e
+            pass
+
     def key_event(self, event):
         out = False
         child = self.get_selected()
@@ -146,11 +176,13 @@ class WIF:
             ## event is not handled.  see if it is an vi edit command
             if event.char == 'i':
                 wtext = WText(self, '', unifont_f=True, bigascii=False)
+                out = True
             elif event.char == 'I':
                 wtext = WText(self, '', unifont_f=True, bigascii=True)
+                out = True
             elif event.char == 'T':
                 wtext = WText(self, '', unifont_f=False)
-
+                out = True
         return out
 
     def get_current(self):
@@ -213,6 +245,10 @@ class WIF:
         contrast.set(self.contrast)
         brightness.set(self.brightness)
         background.show()
+        title = 'WyoLum Image Format!   '
+        if self.fn is not None:
+            title = title + os.path.split(self.fn)[-1]
+        root.wm_title(title)
 
     def unselect(self):
         self.selected = False
@@ -237,6 +273,12 @@ class WIF:
         self.canvas.delete("active")
         self.active_region = area
         self.active_region_id = canvas.create_rectangle(self.active_region, tags=("rect", "active"))
+        ar_p1 = list(self.active_region)
+        ar_p1[0] -= 1
+        ar_p1[1] -= 1
+        ar_p1[2] += 1
+        ar_p1[3] += 1
+        self.active_region_id = canvas.create_rectangle(ar_p1, tags=("rect", "active"), outline='white')
 
     def equalize(self):
         if self.image1 is not None:
@@ -272,10 +314,6 @@ class WIF:
         
         if not subordinate:
             self.canvas.tag_raise("rect")
-            title = 'WyoLum Image Format!   '
-            if self.fn is not None:
-                title = title + os.path.split(self.fn)[-1]
-            root.wm_title(title)
 
     def move(self, dx, dy):
         if self != background:
@@ -420,11 +458,37 @@ class WIF:
 
     def init_image(self, fn, size=None):
         global default_path
+        prescaled = False
+
         if fn is None:
             if size is None: ## default to full screen
                 size = (W + 2, H + 2)
             ## background image (all white)
             self.image1 = Image.new('1', size, WHITE)
+        elif fn.startswith('copy://'):
+            data = fn[len('copy://'):]
+            data = json.loads(data)
+            root.tempf.seek(0)
+            buff = root.tempf.read()
+            buff = StringIO.StringIO(buff)
+            self.image1 = Image.open(buff)
+            self.contrast  = data[0]['contrast']
+            self.brightness = data[0]['brightness']
+            self.scale = self.sscale = data[0]['sscale']
+            self.pos = (current_event.x - self.image1.size[0] * self.scale / 2, 
+                        current_event.y - self.image1.size[1] * self.scale / 2)
+            print current_event.x, current_event.y
+            #'pos':(event.mouse.x, event.mous.y)            
+            prescaled = True
+            
+        elif fn.startswith('http://'):
+            try:
+                data = StringIO.StringIO(urllib2.urlopen(fn).read())
+                self.image1 = Image.open(data).convert('1')
+                size = self.image1.size
+            except:
+                raise
+                pass
         elif fn.upper().endswith('.WIF'):
             ## read in WIF format
             def bit(val, i): 
@@ -449,7 +513,9 @@ class WIF:
             ## read in all other formats
             self.image1 = Image.open(fn).convert('L')
         x, y = self.image1.size
-        if x > W or y > H:
+        if prescaled:
+            pass
+        elif x > W or y > H:
             ## rescale to fit
             scale = min([ W / float(x), H / float(y) ])
             self.scale = scale
@@ -469,10 +535,14 @@ class WIF:
         else:
             self.scale = 1.
             self.pos = ((W - x)/2, (H - y)/2)
-        self.sscale = self.scale      ## saved between drags
+        if prescaled:
+            print 'prescaled', self.pos, self.sscale
+            pass
+        else:
+            self.contrast = 1.
+            self.brightness = 1.
+            self.sscale = self.scale      ## saved between drags
         self.fn = fn
-        self.contrast = 1.
-        self.brightness = 1.
         self.id = None
         self.start = (None, None)
         if fn:
@@ -571,19 +641,25 @@ class WText(WIF):
             self.cursor -= 1
     def key_event(self, event):
         char = event.char
+        out = False
         if event.keycode == LEFT_KC:
             if self.cursor > 0:
                 self.cursor -= 1
+            out = True
         elif event.keycode == RIGHT_KC:
             if self.cursor < len(self.text):
                 self.cursor += 1
+            out = True
         elif char == BACKSPACE:
             self.backspace()
+            out = True
         elif char == RETURN or char == ESC:
             self.unselect()
+            out = True
         else:
             self.insert(char, self.cursor)
-        return True
+            out = True
+        return out
     
 root = Tkinter.Tk()
 root.wm_title('WyoLum Image Format!')
@@ -606,6 +682,8 @@ canvas.bind('<B1-Motion>', background.drag)
 canvas.bind('<B3-Motion>', background.resize)
 canvas.bind('<ButtonRelease-1>', background.release_event)
 canvas.bind('<ButtonRelease-3>', background.save_scale)
+root.bind('<Control-c>', background.ctrl_c)
+root.bind('<Control-v>', background.ctrl_v)
 root.bind('<Key>', background.key_event)
 root.bind('<Delete>', background.delete_selected)
 root.bind('<Prior>', background.pull_selected) ## page up
@@ -653,10 +731,10 @@ menubar.add_cascade(label="Size", menu=sizeMenu)
 
 insertMenu = Tkinter.Menu(menubar)
 insertMenu.add_command(label="Image", command=file_import_dialog)
-insertMenu.add_command(label="Large Text", command=curry(WText, background, '', unifont_f=True, bigascii=True))
-insertMenu.add_command(label="Medium Text", command=curry(WText, background, '', unifont_f=True, bigascii=False))
-insertMenu.add_command(label="Small Text",  command=curry(WText, background, '', unifont_f=False, bigascii=False))
-insertMenu.add_command(label="Tiny Text")
+insertMenu.add_command(label="Big ASCII Text", command=curry(WText, background, '', unifont_f=True, bigascii=True))
+insertMenu.add_command(label="Unifont Text", command=curry(WText, background, '', unifont_f=True, bigascii=False))
+insertMenu.add_command(label="5x7 Text",  command=curry(WText, background, '', unifont_f=False, bigascii=False))
+insertMenu.add_command(label="4x4 Text")
 menubar.add_cascade(label="Insert", menu=insertMenu)
 
 background.set_area(EPD_LARGE)
