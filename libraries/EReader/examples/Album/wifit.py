@@ -11,6 +11,7 @@ import Tkinter
 import tkFileDialog
 import Image, ImageTk
 import ImageEnhance
+import PIL.ImageOps
 import struct
 import os.path
 
@@ -140,7 +141,16 @@ class WIF:
         self.owns_event = False ## keep track of widget that owns a mouse drag
         self.selected = False   ## select with left mouse no drag
         self.dragging = False
-    
+
+    def invert_image(self, event=None):
+        child = self.get_selected()
+        if child:
+            try:
+                child.image1 = PIL.ImageOps.invert(child.image1.convert('L'))
+                background.show()
+            except IOError:
+                raise
+
     def ctrl_c(self, event):
         global tempf
         child = self.get_selected()
@@ -383,7 +393,7 @@ class WIF:
                 handler.scale = handler.sscale + (event.x - handler.start[0]) / float(W)
             handler.bbox[2] = handler.bbox[0] + handler.scale * (handler.bbox[2] - handler.bbox[0])
             handler.bbox[3] = handler.bbox[1] + handler.scale * (handler.bbox[3] - handler.bbox[1])
-            handler.show(subordinate=subordinate)
+            background.show()
 
     def release_event(self, event):
         handler = self.locate_handler(event)
@@ -391,6 +401,8 @@ class WIF:
         if not handler.dragging: ## must have been a click
             ## unselect all
             background.unselect()
+            
+            ## select the clicked object
             handler.select()
             background.show()
         else:
@@ -466,7 +478,7 @@ class WIF:
             if size is None: ## default to full screen
                 size = (W + 2, H + 2)
             ## background image (all white)
-            self.image1 = Image.new('1', size, WHITE)
+            self.image1 = Image.new('L', size, WHITE)
         elif fn.startswith('copy://'):
             data = fn[len('copy://'):]
             data = json.loads(data)
@@ -479,14 +491,13 @@ class WIF:
             self.scale = self.sscale = data[0]['sscale']
             self.pos = (current_event.x - self.image1.size[0] * self.scale / 2, 
                         current_event.y - self.image1.size[1] * self.scale / 2)
-            print current_event.x, current_event.y
             #'pos':(event.mouse.x, event.mous.y)            
             prescaled = True
             
         elif fn.startswith('http://'):
             try:
                 data = StringIO.StringIO(urllib2.urlopen(fn).read())
-                self.image1 = Image.open(data).convert('1')
+                self.image1 = Image.open(data)
                 size = self.image1.size
             except:
                 raise
@@ -509,11 +520,11 @@ class WIF:
             except:
                 ldat = []
                 size = (w, h)
-            self.image1 = Image.new('1', size, WHITE)
+            self.image1 = Image.new('L', size, WHITE)
             self.image1.putdata(ldat)
         else:
             ## read in all other formats
-            self.image1 = Image.open(fn).convert('L')
+            self.image1 = Image.open(fn)
         x, y = self.image1.size
         if prescaled:
             pass
@@ -600,7 +611,6 @@ class WText(WIF):
         self.unifont_f = unifont_f
         self.bigascii = bigascii ## needed for self.size
         WIF.__init__(self, fn=None, parent=parent, size=self.size)
-        print current_event
         if current_event is not None:
             self.pos = current_event.x, current_event.y
         self.layout_text()
@@ -622,7 +632,7 @@ class WText(WIF):
         self.text = self.text[:self.cursor] + text + self.text[self.cursor:]
         self.cursor += len(text)
         self.canvas.delete(self.id) ## delete old image
-        self.image1 = Image.new('1', self.size, WHITE)
+        self.image1 = Image.new('L', self.size, WHITE)
         self.layout_text()
         background.show()
 
@@ -640,7 +650,7 @@ class WText(WIF):
         if self.cursor > 0:
             self.text = self.text[:self.cursor - 1] + self.text[self.cursor:]
             self.canvas.delete(self.id) ## delete old image
-            self.image1 = Image.new('1', self.size, WHITE)
+            self.image1 = Image.new('L', self.size, WHITE)
             self.layout_text()
             background.show()
             self.cursor -= 1
@@ -698,6 +708,7 @@ canvas.bind('<B1-Motion>', background.drag)
 canvas.bind('<B3-Motion>', background.resize)
 canvas.bind('<ButtonRelease-1>', background.release_event)
 canvas.bind('<ButtonRelease-3>', background.save_scale)
+root.bind('<Control-i>', background.invert_image)
 root.bind('<Control-c>', background.ctrl_c)
 root.bind('<Control-v>', background.ctrl_v)
 root.bind('<Control-a>', printstack)
@@ -738,6 +749,10 @@ fileMenu.add_command(label="Open", command=file_open_dialog)
 fileMenu.add_command(label="Save", command=file_save_dialog)
 fileMenu.add_command(label="Exit", command=root.quit)
 menubar.add_cascade(label="File", menu=fileMenu)
+
+editMenu = Tkinter.Menu(menubar)
+editMenu.add_command(label="Invert", command=background.invert_image)
+menubar.add_cascade(label="Edit", menu=editMenu)
 
 sizeMenu = Tkinter.Menu(menubar)
 sizeMenu.add_command(label="EPD_LARGE", command=curry(background.set_area, EPD_LARGE))
