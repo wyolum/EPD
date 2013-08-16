@@ -126,7 +126,8 @@ def create_frontpage(sd, alb='ALBUM/A', filename='person.csv', headshot=None):
 
     if headshot:
         print 'adding headshot', headshot
-        frontpage.addImage(Image.open(headshot), 152, 0)
+        print Image.open(headshot).size
+        frontpage.addImage(Image.open(headshot), 112, 0)
     for i, role in enumerate(person.roles):
         frontpage.addUnifont(role, 5, 5 + (i + 1) * 16, bigascii=False)
     size = unifont.calcsize(person.name, bigascii=True)
