@@ -107,39 +107,69 @@ def copy_dir(source, dest):
 NAME_W = 264
 NAME_Y = 128
 NAME_H = 48
-def create_frontpage(sd, alb='ALBUM/A', filename='person.csv', headshot=None):
-    ### Custom Page    
+def create_frontpage(sd, alb='ALBUM/A', filename=None, headshot=None, 
+                     headshot_bbox=None):
     assert os.path.exists(sd)
+    photo_only = False
+
+    frontpage = WIF()
+
+    if headshot is None or not os.path.exists(headshot):
+        headshot = 'DEFAULT_HEADSHOT.png'
+    ### Custom Page    
     dir = os.path.join(sd, alb)
     if not os.path.exists(dir):
-        raise ValueError("Cannot find personal record")
-
-    person = list(csv.reader(open(os.path.join(sd, filename))))
-    header = person[0]
-    person = person[1]
-
-    person = Attendee(person, header)
-    print person.name
-    frontpage = WIF()
-    ohs2013 = Image.open('ohs2013_thumb.jpg')
-    frontpage.addImage(ohs2013, 5, 5)
+        photo_only = True
+        print "%s not present" % alb
+        dir = '.'
+    if filename is None:
+        photo_only = True
+    else:
+        filename = os.path.join(sd, filename)
+        if not os.path.exists(filename):
+            photo_only = True
+            print "Cannot find personal record:", filename
 
     if headshot:
         print 'adding headshot', headshot
-        print Image.open(headshot).size
-        frontpage.addImage(Image.open(headshot), 112, 0)
-    for i, role in enumerate(person.roles):
-        frontpage.addUnifont(role, 5, 5 + (i + 1) * 16, bigascii=False)
-    size = unifont.calcsize(person.name, bigascii=True)
-    NAME_AREA = NAME_W, NAME_H
-    scale = int(min([NAME_AREA[0] / float(size[0]), NAME_AREA[1] / float(size[1])]))
-    image1 = Image.new('L', size, WHITE)
-    size = size[0] * scale, size[1] * scale
-    unifont.addText(person.name, image1, 0, 0, bigascii=True)
-    image2 = image1.resize(size)
+        head = Image.open(headshot)
+        if headshot_bbox is None:
+            if photo_only:
+                headshot_bbox = ((WIDTH - head.size[0])/2,
+                                 (HEIGHT - head.size[1])/2, 
+                                 (WIDTH + head.size[0])/2,
+                                 (HEIGHT + head.size[1])/2
+                                 )
+            else:
+                headshot_bbox = (112, 0, 264, 128)
 
-    frontpage.im.paste(image2, ((NAME_W - size[0]) / 2, 176 - 24 ), 0)
-    frontpage.addBreadCrumb(0, 0, 0, 0, BREADCRUMB_SHAPE)
+        frontpage.addImage(head, 
+                           headshot_bbox[0], headshot_bbox[1])
+    if not photo_only:
+        person = list(csv.reader(open(filename)))
+        header = person[0]
+        person = person[1]
+
+        person = Attendee(person, header)
+        print person.name
+        ohs2013 = Image.open('ohs2013_thumb.jpg')
+        frontpage.addImage(ohs2013, 5, 5)
+
+        for i, role in enumerate(person.roles):
+            frontpage.addUnifont(role, 5, 5 + (i + 1) * 16, bigascii=False)
+        size = unifont.calcsize(person.name, bigascii=True)
+        NAME_AREA = NAME_W, NAME_H
+        scale = int(min([NAME_AREA[0] / float(size[0]), NAME_AREA[1] / float(size[1])]))
+        image1 = Image.new('L', size, WHITE)
+        size = size[0] * scale, size[1] * scale
+        unifont.addText(person.name, image1, 0, 0, bigascii=True)
+        image2 = image1.resize(size)
+
+        frontpage.im.paste(image2, ((NAME_W - size[0]) / 2, 176 - 24 ), 0)
+        frontpage.addBreadCrumb(0, 0, 0, 0, BREADCRUMB_SHAPE)
     frontpage.saveas(os.path.join(dir, 'A.WIF'))
     frontpage.show()
 create_frontpage('.', alb='ALBUM/A', filename='person.csv', headshot='DEFAULT_HEADSHOT.png')
+
+create_frontpage('.', headshot='DEFAULT_HEADSHOT.png', 
+                 )
