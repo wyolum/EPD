@@ -6,11 +6,12 @@ import glob
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
-import qrcode
+# import qrcode
 import csv
 from wif import towif, WIF, PAGE, NAME_FONT_SIZE, NORMAL_FONT_SIZE, WIDTH, HEIGHT
 
-QR_SIZE = 150
+WHITE = 255
+QR_SIZE = 152
 
 HEADSHOT_DIR = 'headshots/'
 SCHEDULE_DIR = 'schedule/'
@@ -18,7 +19,7 @@ LOGO_DIR = 'logos/'
 OUTPUT_DIR = 'ALBUM/'
 CUSTOM_DIR = 'custom/'
 
-HEADSHOT_WIDTH = 150
+HEADSHOT_WIDTH = 152
 N_PAGE = 3
 
 ### Create schedule prior to counting pages
@@ -38,7 +39,6 @@ def create_sched(filename):
             bigascii = False
             wrap = 44
         for l in textwrap.wrap(line, wrap, subsequent_indent='  '):
-            # page.addUnifont(l, x, y, bigascii=bigascii)
             page.add_7x5_txt(l, x, y)
             y += 9
             if y > 176 - 16:
@@ -46,11 +46,13 @@ def create_sched(filename):
                 page_no += 1
                 page = WIF()
                 y = 9
-create_sched('schedule.txt')
-BREADCRUMB_SHAPE = [3, 
-                    len(glob.glob(LOGO_DIR + '[A-Z].png')),
-                    len(glob.glob(SCHEDULE_DIR + '[A-Z].png')),
-                    ]   ### 3 rows of images: 3 images is first row, 5 in next, 3 in last
+N_HEAD = 3
+N_LOGO = 10
+N_SCHED = 8
+BREADCRUMB_SHAPE = [N_HEAD, 
+                    N_LOGO,
+                    N_SCHED
+                    ]   ### 3 rows of images
 
 class Attendee:
     def __init__(self, line, header):
@@ -69,7 +71,7 @@ class Attendee:
         return '\n'.join([self.name, self.email, self.phone, self.website])
     
     def getRoles(self):
-        out = ['Summiter']
+        out = []
         if self.organizer[0].lower() == 'y':
             out.append('Organizer')
         if self.speaker[0].lower() == 'y':
@@ -79,10 +81,11 @@ class Attendee:
         return out
     roles = property(getRoles)
     def qr(self):
-        return qrcode.make(str(self))
+        try:
+            return qrcode.make(str(self))
+        except:
+            raise ImportError("Please install qrcode to use this feature")
 
-create_sched('schedule.txt')
-### Standard Pages
 def wif_directory(dir, level, rotate=False):
     files = glob.glob(os.path.join(dir, '[A-Z].png'))
     files.sort()
@@ -94,8 +97,6 @@ def wif_directory(dir, level, rotate=False):
         if rotate:
             page.rotate180()
         page.saveas(OUTPUT_DIR + chr(ord('A') + level) + '/' + fn[0] + '.WIF')
-wif_directory(LOGO_DIR, 1)
-wif_directory(SCHEDULE_DIR, 2, rotate=True)
 
 def copy_dir(source, dest):
     if os.path.exists(dest):
@@ -103,47 +104,41 @@ def copy_dir(source, dest):
         assert not os.path.exists(dest)
     shutil.copytree(source, dest)
 
-### Custom Pages    
-FILENAME = 'summiters.csv'
-people = list(csv.reader(open(FILENAME)))
-header = people[0]
-people = people[1:]
+NAME_W = 264
+NAME_Y = 128
+NAME_H = 48
+def create_frontpage(sd, alb='ALBUM/A', filename='person.csv', headshot=None):
+    ### Custom Page    
+    assert os.path.exists(sd)
+    dir = os.path.join(sd, alb)
+    if not os.path.exists(dir):
+        raise ValueError("Cannot find personal record")
 
-shutil.rmtree(CUSTOM_DIR)
-os.mkdir(CUSTOM_DIR)
+    person = list(csv.reader(open(os.path.join(sd, filename))))
+    header = person[0]
+    person = person[1]
 
-for person in people[:]:
     person = Attendee(person, header)
-    pages = [WIF() for i in range(N_PAGE)]
-    
-    qr = person.qr().resize((QR_SIZE, QR_SIZE))
-    pages[0].addImage(Image.open(HEADSHOT_DIR + person.headshot), 0, 0)
-    pages[1].addImage(qr, WIDTH - QR_SIZE, 0)
-    pages[2].addImage(Image.open(LOGO_DIR + person.logo), 0, 0)
-    for page in pages:
-        for i, role in enumerate(person.roles):
-            if len(role) <= 8:
-                page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=True)
-            else:
-                page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=False)
-            # page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=False)
-            # page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
-        page.addText(person.name, WIDTH/2, HEIGHT, font_size=NAME_FONT_SIZE, halign='center', valign='bottom')
-    # pages[0].show()
+    print person.name
+    frontpage = WIF()
+    ohs2013 = Image.open('ohs2013_thumb.jpg')
+    frontpage.addImage(ohs2013, 5, 5)
 
-    dir = CUSTOM_DIR + '%04d-%s/ALBUM/' % (int(person.id), '_'.join(person.name.split()))
-    copy_dir(OUTPUT_DIR + 'B/', dir + 'B/')
-    copy_dir(OUTPUT_DIR + 'C/', dir + 'C/')
-    if not(os.path.exists(dir)):
-        os.mkdir(dir)
-        dir = dir + 'A/'
-        os.mkdir(dir)
+    if headshot:
+        print 'adding headshot', headshot
+        frontpage.addImage(Image.open(headshot), 152, 0)
+    for i, role in enumerate(person.roles):
+        frontpage.addUnifont(role, 5, 5 + (i + 1) * 16, bigascii=False)
+    size = unifont.calcsize(person.name, bigascii=True)
+    NAME_AREA = NAME_W, NAME_H
+    scale = int(min([NAME_AREA[0] / float(size[0]), NAME_AREA[1] / float(size[1])]))
+    image1 = Image.new('L', size, WHITE)
+    size = size[0] * scale, size[1] * scale
+    unifont.addText(person.name, image1, 0, 0, bigascii=True)
+    image2 = image1.resize(size)
 
-    dir = dir + 'A/'
-    if os.path.exists(dir):
-        os.rmdir(dir)
-    os.mkdir(dir)
-    for i, page in enumerate(pages):
-        page.addBreadCrumb(0, 0, 0, i, BREADCRUMB_SHAPE)
-        page.saveas(dir + chr(ord('A') + i) + '.WIF')
-    # page.show()
+    frontpage.im.paste(image2, ((NAME_W - size[0]) / 2, 176 - 24 ), 0)
+    frontpage.addBreadCrumb(0, 0, 0, 0, BREADCRUMB_SHAPE)
+    frontpage.saveas(os.path.join(dir, 'A.WIF'))
+    frontpage.show()
+create_frontpage('.', alb='ALBUM/A', filename='person.csv', headshot='DEFAULT_HEADSHOT.png')
