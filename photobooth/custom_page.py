@@ -131,8 +131,9 @@ def create_frontpage(sd, alb='ALBUM/A', filename=None, headshot=None,
             print "Cannot find personal record:", filename
 
     if headshot:
-        print 'adding headshot', headshot
+        print 'adding headshot "%s"' % headshot
         head = Image.open(headshot)
+        print "head.size", head.size
         if headshot_bbox is None:
             if photo_only:
                 headshot_bbox = ((WIDTH - head.size[0])/2,
@@ -169,5 +170,6 @@ def create_frontpage(sd, alb='ALBUM/A', filename=None, headshot=None,
         frontpage.addBreadCrumb(0, 0, 0, 0, BREADCRUMB_SHAPE)
     frontpage.saveas(os.path.join(dir, 'A.WIF'))
     frontpage.show()
+    print photo_only, headshot_bbox
 # create_frontpage('.', alb='ALBUM/A', filename='person.csv', headshot='DEFAULT_HEADSHOT.png')
 # create_frontpage('.', headshot='DEFAULT_HEADSHOT.png')                )
