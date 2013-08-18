@@ -2,10 +2,12 @@ import os
 import os.path
 from custom_page import *
 import getpass
+import glob
 
 SD_PATH = '/media/usb'
 SD_PATH = '.' 
 ALBUM = 'ALBUM'
+ARCHIVE = 'photos'
 
 START_X = 175
 START_Y = 200
@@ -28,6 +30,17 @@ def sd_umount():
 def ispi():
     return getpass.getuser() == 'pi'
 
+def next_filename():
+    if not os.path.exists(ARCHIVE):
+        os.mkdir(ARCHIVE)
+    n = len(glob.glob(os.path.join(ARCHIVE, '*.png')))
+    return os.path.join(ARCHIVE, '%04d.png' % n)
+
+def pi_snap():
+    img_filename = next_filename()
+    call(["raspistill", '-o', img_filename])
+    return Image.open(img_filename)
+    
 def laptop_snap():
     import pygame.camera
     pygame.camera.init()
