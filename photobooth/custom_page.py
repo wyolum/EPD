@@ -119,7 +119,6 @@ def create_frontpage(sd, alb='ALBUM/A', filename=None, headshot=None,
     ### Custom Page    
     dir = os.path.join(sd, alb)
     if not os.path.exists(dir):
-        photo_only = True
         print "%s not present" % alb
         dir = '.'
     if filename is None:
