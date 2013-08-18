@@ -3,6 +3,7 @@ import os.path
 from custom_page import *
 import getpass
 import glob
+import subprocess
 
 SD_PATH = '/media/usb'
 SD_PATH = '.' 
@@ -25,7 +26,7 @@ def sd_present():
 
 def sd_umount():
     if sd_present():
-        call(['umount', SD_PATH])
+        subprocess.call(['umount', SD_PATH])
 
 def ispi():
     return getpass.getuser() == 'pi'
