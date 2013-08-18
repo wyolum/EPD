@@ -39,7 +39,7 @@ def next_filename():
 
 def pi_snap():
     img_filename = next_filename()
-    call(["raspistill", '-o', img_filename])
+    subprocess.call(["raspistill", '-o', img_filename])
     return Image.open(img_filename)
     
 def laptop_snap():
