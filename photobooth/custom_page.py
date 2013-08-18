@@ -169,7 +169,5 @@ def create_frontpage(sd, alb='ALBUM/A', filename=None, headshot=None,
         frontpage.addBreadCrumb(0, 0, 0, 0, BREADCRUMB_SHAPE)
     frontpage.saveas(os.path.join(dir, 'A.WIF'))
     frontpage.show()
-create_frontpage('.', alb='ALBUM/A', filename='person.csv', headshot='DEFAULT_HEADSHOT.png')
-
-create_frontpage('.', headshot='DEFAULT_HEADSHOT.png', 
-                 )
+# create_frontpage('.', alb='ALBUM/A', filename='person.csv', headshot='DEFAULT_HEADSHOT.png')
+# create_frontpage('.', headshot='DEFAULT_HEADSHOT.png')                )
