@@ -40,6 +40,7 @@ def next_filename():
 def pi_snap():
     img_filename = next_filename()
     subprocess.call(["raspistill", '-o', img_filename])
+    ### need to resize prolly
     return Image.open(img_filename)
     
 def laptop_snap():

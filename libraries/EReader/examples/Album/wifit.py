@@ -110,7 +110,7 @@ def towif(im, outfn):
     image should be sized already (2.7" display=264x276 pixels) in "1" format
     '''
     width, height = im.size
-    f = open(outfn, 'w')
+    f = open(outfn, 'wb')
     f.write(struct.pack('HH', height, width))
     ## faster, but requires numpy download
     ## np.shape(np.sum([d8[:,:,i] << i for i in range(8)], axis=0))
@@ -510,7 +510,7 @@ class WIF:
                 '''
                 return ord(val) >> i & 1
 
-            f = open(fn)
+            f = open(fn, 'rb')
             try:
                 height, width = struct.unpack('HH', f.read(4))
                 size = (width, height)
@@ -772,4 +772,3 @@ menubar.add_cascade(label="Insert", menu=insertMenu)
 background.set_area(EPD_LARGE)
 background.show()
 root.mainloop()    
-
