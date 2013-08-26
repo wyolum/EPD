@@ -582,7 +582,7 @@ class WIF:
             self.scale = 1.
             self.pos = ((W - x)/2, (H - y)/2)
         if prescaled:
-            print 'prescaled', self.pos, self.sscale
+            # print 'prescaled', self.pos, self.sscale
             pass
         else:
             self.contrast = 1.
@@ -795,12 +795,12 @@ editMenu.add_command(label="Invert (Ctrl-i)", command=background.invert_image)
 editMenu.add_command(label="Rotate (Ctrl-r)", command=background.rotate_image)
 editMenu.add_command(label="Flip V (Ctrl-u)", command=background.flip_v_image)
 editMenu.add_command(label="Flip H (Ctrl-h)", command=background.flip_h_image)
-editMenu.add_command(label="Nudge UP (Shift-Up)", command=curry(background.nudge, y=-1))
-editMenu.add_command(label="Nudge UP (Shift-Down)", command=curry(background.nudge, y=1))
-editMenu.add_command(label="Nudge UP (Shift-Left)", command=curry(background.nudge, x=-1))
-editMenu.add_command(label="Nudge UP (Shift-Right)", command=curry(background.nudge, x=1))
+editMenu.add_command(label="Nudge Up (Shift-Up)", command=curry(background.nudge, y=-1))
+editMenu.add_command(label="Nudge Down (Shift-Down)", command=curry(background.nudge, y=1))
+editMenu.add_command(label="Nudge Left (Shift-Left)", command=curry(background.nudge, x=-1))
+editMenu.add_command(label="Nudge Up (Shift-Right)", command=curry(background.nudge, x=1))
 menubar.add_cascade(label="Edit", menu=editMenu)
-root.bind('<Shift-Up>', )
+root.bind('<Shift-Up>', curry(background.nudge, y=1))
 root.bind('<Shift-Down>', curry(background.nudge, y=1))
 root.bind('<Shift-Left>', curry(background.nudge, x=-1))
 root.bind('<Shift-Right>', curry(background.nudge, x=1))
