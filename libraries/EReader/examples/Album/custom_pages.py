@@ -12,9 +12,12 @@ from wif import towif, WIF, PAGE, NAME_FONT_SIZE, NORMAL_FONT_SIZE, WIDTH, HEIGH
 
 QR_SIZE = 150
 
+DEFAULT = "default.png"
+BACKGROUND = "background.png"
 HEADSHOT_DIR = 'headshots/'
 SCHEDULE_DIR = 'schedule/'
 LOGO_DIR = 'logos/'
+SPONSOR_DIR = 'sponsors/'
 OUTPUT_DIR = 'ALBUM/'
 CUSTOM_DIR = 'custom/'
 
@@ -29,7 +32,19 @@ def create_sched(filename):
     page = WIF()
     page_no = 0
     for line in dat:
+        print line.strip()
         line = line.strip()
+        def closewif(page, page_no):
+            page.im.save(SCHEDULE_DIR + chr(ord('A') + page_no) + '.png')
+            page_no += 1
+            page = WIF()
+            return page, page_no, 0
+
+        if line.startswith('<P>'): ## new page
+            line = line[3:]
+            if y > 0:
+                page, page_no, y = closewif(page, page_no)
+
         if line.startswith('<B>'):
             line = line[3:]
             bigascii = True
@@ -41,22 +56,28 @@ def create_sched(filename):
             # page.addUnifont(l, x, y, bigascii=bigascii)
             page.add_7x5_txt(l, x, y)
             y += 9
-            if y > 176 - 16:
-                page.im.save(SCHEDULE_DIR + chr(ord('A') + page_no) + '.png')
-                page_no += 1
-                page = WIF()
-                y = 9
+            if y > 176 - 9:
+                page, page_no, y = closewif(page, page_no)
+                
+    closewif(page, page_no)
 create_sched('schedule.txt')
 BREADCRUMB_SHAPE = [3, 
-                    len(glob.glob(LOGO_DIR + '[A-Z].png')),
-                    len(glob.glob(SCHEDULE_DIR + '[A-Z].png')),
+                    len(glob.glob(os.path.join(SPONSOR_DIR, '[A-Z].png'))),
+                    len(glob.glob(os.path.join(SCHEDULE_DIR, '[A-Z].png'))),
                     ]   ### 3 rows of images: 3 images is first row, 5 in next, 3 in last
-
 class Attendee:
     def __init__(self, line, header):
         self.line = [cell.strip() for cell in line]
         self.header = [h.lower().strip() for h in header]
         self.dat = dict(zip(self.header, self.line))
+        self.name = '%s %s' % (self.dat['attendee first name'],
+                               self.dat['attendee last name'])
+    def makecsv(self, fn):
+        f = open(fn, 'w')
+        writer = csv.writer(f)
+        writer.writerows([self.header, self.line])
+        print 'wrote', fn
+        f.close()
         
     def printme(self):
         print self.line
@@ -67,21 +88,41 @@ class Attendee:
 
     def __str__(self):
         return '\n'.join([self.name, self.email, self.phone, self.website])
-    
+
+    def getHeadshot(self):
+        if self.dat['headshot'] and os.path.exists(os.path.join(HEADSHOT_DIR, self.dat['headshot'])):
+            out = self.dat['headshot']
+        else:
+            out = DEFAULT
+        return out
+    def getLogo(self):
+        if self.dat['logo'] and os.path.exists(os.path.join(LOGO_DIR, self.dat['logo'])):
+            out = self.dat['logo']
+        else:
+            out = DEFAULT
+        return out
+
     def getRoles(self):
-        out = ['Summiter']
-        if self.organizer[0].lower() == 'y':
+        out = []
+        if self.organizer:
             out.append('Organizer')
-        if self.speaker[0].lower() == 'y':
+        if self.speaker:
             out.append('Speaker')
-        if self.sponsor[0].lower() == 'y':
+        if self.sponsor:
             out.append('Sponsor')
+        if self.volunteer:
+            out.append('Volunteer')
+        if self.demo :
+            out.append('Demo')
+        if self.poster:
+            out.append('Poster')
+        if self.press:
+            out.append('Press')
         return out
     roles = property(getRoles)
     def qr(self):
         return qrcode.make(str(self))
 
-create_sched('schedule.txt')
 ### Standard Pages
 def wif_directory(dir, level, rotate=False):
     files = glob.glob(os.path.join(dir, '[A-Z].png'))
@@ -93,9 +134,11 @@ def wif_directory(dir, level, rotate=False):
         page.addBreadCrumb(0, 0, level, i, BREADCRUMB_SHAPE)
         if rotate:
             page.rotate180()
-        page.saveas(OUTPUT_DIR + chr(ord('A') + level) + '/' + fn[0] + '.WIF')
-wif_directory(LOGO_DIR, 1)
-wif_directory(SCHEDULE_DIR, 2, rotate=True)
+        fn = OUTPUT_DIR + chr(ord('A') + level) + '/' + fn[0] + '.WIF'
+        page.saveas(fn)
+        print fn
+wif_directory(SPONSOR_DIR, 1)
+wif_directory(SCHEDULE_DIR, 2, rotate=False)
 
 def copy_dir(source, dest):
     if os.path.exists(dest):
@@ -104,32 +147,32 @@ def copy_dir(source, dest):
     shutil.copytree(source, dest)
 
 ### Custom Pages    
-FILENAME = 'summiters.csv'
+FILENAME = 'attendees1.csv'
 people = list(csv.reader(open(FILENAME)))
 header = people[0]
 people = people[1:]
 
-shutil.rmtree(CUSTOM_DIR)
+if os.path.exists(CUSTOM_DIR):
+    shutil.rmtree(CUSTOM_DIR)
 os.mkdir(CUSTOM_DIR)
 
 for person in people[:]:
     person = Attendee(person, header)
+    print person.name, person.headshot, person.logo
     pages = [WIF() for i in range(N_PAGE)]
     
     qr = person.qr().resize((QR_SIZE, QR_SIZE))
-    pages[0].addImage(Image.open(HEADSHOT_DIR + person.headshot), 0, 0)
+    for page in pages:
+        page.addImage(Image.open(os.path.join(BACKGROUND)), 0, 0)
+    pages[0].addImage(Image.open(os.path.join(HEADSHOT_DIR, person.getHeadshot())), 112, 0)
     pages[1].addImage(qr, WIDTH - QR_SIZE, 0)
-    pages[2].addImage(Image.open(LOGO_DIR + person.logo), 0, 0)
+    pages[2].addImage(Image.open(os.path.join(LOGO_DIR,  person.getLogo())), 112, 0)
     for page in pages:
         for i, role in enumerate(person.roles):
-            if len(role) <= 8:
-                page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=True)
-            else:
-                page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=False)
+            page.addUnifont(role, 0, 0 + (i + 1) * 16 + 5, bigascii=False)
             # page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=False)
             # page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
         page.addText(person.name, WIDTH/2, HEIGHT, font_size=NAME_FONT_SIZE, halign='center', valign='bottom')
-    # pages[0].show()
 
     dir = CUSTOM_DIR + '%04d-%s/ALBUM/' % (int(person.id), '_'.join(person.name.split()))
     copy_dir(OUTPUT_DIR + 'B/', dir + 'B/')
@@ -139,11 +182,14 @@ for person in people[:]:
         dir = dir + 'A/'
         os.mkdir(dir)
 
-    dir = dir + 'A/'
+    dir = os.path.join(dir, 'A/')
     if os.path.exists(dir):
         os.rmdir(dir)
     os.mkdir(dir)
     for i, page in enumerate(pages):
         page.addBreadCrumb(0, 0, 0, i, BREADCRUMB_SHAPE)
-        page.saveas(dir + chr(ord('A') + i) + '.WIF')
+        page.saveas(os.path.join(dir, chr(ord('A') + i) + '.WIF'))
+    fn = os.path.join(dir, 'person.csv')
+    person.makecsv(fn)
+    break
     # page.show()

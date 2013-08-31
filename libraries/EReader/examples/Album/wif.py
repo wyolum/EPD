@@ -32,7 +32,7 @@ class WIF:
         self.im.paste(img, box)
 
     def addUnifont(self, txt, x, y, **kw):
-        unifont.addText(txt, self.im, x, y, self.wff_file, **kw)
+        unifont.addText(txt, self.im, x, y, wff_file=self.wff_file, **kw)
 
     def add_7x5_txt(self, txt, x, y, **kw):
         ascii_5x7.addText(txt, self.im, x, y, **kw)
@@ -74,7 +74,7 @@ class WIF:
         self.draw.text((x, y), txt, color, font=font)
     
     def addBreadCrumb(self, x, y, row, col, shape, color=BLACK):
-        startx = WIDTH - max(shape) * BREADCRUMB_SIZE
+        startx = WIDTH - (max(shape) + 1) * BREADCRUMB_SIZE
         starty = HEIGHT - len(shape) * BREADCRUMB_SIZE
         for i, n_col in enumerate(shape):
             for j in range(n_col):

@@ -322,7 +322,6 @@ class WIF:
             ar_p1[2] += 1
             ar_p1[3] += 1
             self.active_region_id = canvas.create_rectangle(ar_p1, tags=("rect", "active"), outline='white')
-
     def equalize(self):
         if self.image1 is not None:
             contr = ImageEnhance.Contrast(self.image1)
@@ -800,7 +799,7 @@ editMenu.add_command(label="Nudge Down (Shift-Down)", command=curry(background.n
 editMenu.add_command(label="Nudge Left (Shift-Left)", command=curry(background.nudge, x=-1))
 editMenu.add_command(label="Nudge Up (Shift-Right)", command=curry(background.nudge, x=1))
 menubar.add_cascade(label="Edit", menu=editMenu)
-root.bind('<Shift-Up>', curry(background.nudge, y=1))
+root.bind('<Shift-Up>', curry(background.nudge, y=-1))
 root.bind('<Shift-Down>', curry(background.nudge, y=1))
 root.bind('<Shift-Left>', curry(background.nudge, x=-1))
 root.bind('<Shift-Right>', curry(background.nudge, x=1))
@@ -820,6 +819,6 @@ insertMenu.add_command(label="5x7 Text",  command=curry(WText, parent=background
 insertMenu.add_command(label="4x4 Text (not implimented)")
 menubar.add_cascade(label="Insert", menu=insertMenu)
 
-background.set_area(EPD_LARGE)
+background.set_area(area=EPD_LARGE)
 background.show()
 root.mainloop()    
