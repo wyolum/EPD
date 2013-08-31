@@ -521,8 +521,8 @@ class WIF:
             self.contrast  = data[0]['contrast']
             self.brightness = data[0]['brightness']
             self.scale = self.sscale = data[0]['sscale']
-            self.pos = (current_event.x - self.image1.size[0] * self.scale / 2, 
-                        current_event.y - self.image1.size[1] * self.scale / 2)
+            self.pos = (int(current_event.x - self.image1.size[0] * self.scale / 2), 
+                        int(current_event.y - self.image1.size[1] * self.scale / 2))
             #'pos':(event.mouse.x, event.mous.y)            
             prescaled = True
             
