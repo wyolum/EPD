@@ -1,6 +1,7 @@
 import textwrap
 import unifont
 import shutil
+import os
 import os.path
 import glob
 from PIL import Image
@@ -32,7 +33,6 @@ def create_sched(filename):
     page = WIF()
     page_no = 0
     for line in dat:
-        print line.strip()
         line = line.strip()
         def closewif(page, page_no):
             page.im.save(SCHEDULE_DIR + chr(ord('A') + page_no) + '.png')
@@ -92,12 +92,16 @@ class Attendee:
     def getHeadshot(self):
         if self.dat['headshot'] and os.path.exists(os.path.join(HEADSHOT_DIR, self.dat['headshot'])):
             out = self.dat['headshot']
+        elif os.path.exists(os.path.join(HEADSHOT_DIR, '_'.join(self.name.lower().split()) + '.png')):
+            out = '_'.join(self.name.lower().split()) + '.png'
         else:
             out = DEFAULT
         return out
     def getLogo(self):
         if self.dat['logo'] and os.path.exists(os.path.join(LOGO_DIR, self.dat['logo'])):
             out = self.dat['logo']
+        elif self.dat['company'] and os.path.exists(os.path.join(LOGO_DIR, '_'.join(self.dat['company'].lower().split()) + '.png')):
+            out = '_'.join(self.dat['company'].lower().split()) + '.png'
         else:
             out = DEFAULT
         return out
@@ -118,6 +122,8 @@ class Attendee:
             out.append('Poster')
         if self.press:
             out.append('Press')
+        if self.company:
+            out.append(self.company)
         return out
     roles = property(getRoles)
     def qr(self):
@@ -125,6 +131,10 @@ class Attendee:
 
 ### Standard Pages
 def wif_directory(dir, level, rotate=False):
+    delete_all = glob.glob(os.path.join(dir, '[A-Z].WIF'))
+    for file in delete_all:
+        os.remove(file)
+        print 'deleted', file
     files = glob.glob(os.path.join(dir, '[A-Z].png'))
     files.sort()
     for i, img_fn in enumerate(files):
@@ -136,9 +146,8 @@ def wif_directory(dir, level, rotate=False):
             page.rotate180()
         fn = OUTPUT_DIR + chr(ord('A') + level) + '/' + fn[0] + '.WIF'
         page.saveas(fn)
-        print fn
 wif_directory(SPONSOR_DIR, 1)
-wif_directory(SCHEDULE_DIR, 2, rotate=False)
+wif_directory(SCHEDULE_DIR, 2, rotate=True)
 
 def copy_dir(source, dest):
     if os.path.exists(dest):
@@ -169,7 +178,7 @@ for person in people[:]:
     pages[2].addImage(Image.open(os.path.join(LOGO_DIR,  person.getLogo())), 112, 0)
     for page in pages:
         for i, role in enumerate(person.roles):
-            page.addUnifont(role, 0, 0 + (i + 1) * 16 + 5, bigascii=False)
+            page.addUnifont(role[:14], 0, 0 + (i + 1) * 16 + 5, bigascii=False)
             # page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=False)
             # page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
         page.addText(person.name, WIDTH/2, HEIGHT, font_size=NAME_FONT_SIZE, halign='center', valign='bottom')
@@ -191,5 +200,4 @@ for person in people[:]:
         page.saveas(os.path.join(dir, chr(ord('A') + i) + '.WIF'))
     fn = os.path.join(dir, 'person.csv')
     person.makecsv(fn)
-    break
     # page.show()
