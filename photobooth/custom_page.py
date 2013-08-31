@@ -59,6 +59,9 @@ class Attendee:
         self.line = [cell.strip() for cell in line]
         self.header = [h.lower().strip() for h in header]
         self.dat = dict(zip(self.header, self.line))
+        if 'name' not in self.dat:
+            self.name = '%s %s' % (self.dat['attendee first name'],
+                                   self.dat['attendee last name'])
         
     def printme(self):
         print self.line
@@ -72,12 +75,20 @@ class Attendee:
     
     def getRoles(self):
         out = []
-        if self.organizer[0].lower() == 'y':
+        if self.organizer:
             out.append('Organizer')
-        if self.speaker[0].lower() == 'y':
+        if self.speaker:
             out.append('Speaker')
-        if self.sponsor[0].lower() == 'y':
+        if self.sponsor:
             out.append('Sponsor')
+        if self.volunteer:
+            out.append('Volunteer')
+        if self.demo :
+            out.append('Demo')
+        if self.poster:
+            out.append('Poster')
+        if self.press:
+            out.append('Press')
         return out
     roles = property(getRoles)
     def qr(self):
@@ -124,11 +135,10 @@ def create_frontpage(sd, alb='ALBUM/A', filename=None, headshot=None,
     if filename is None:
         photo_only = True
     else:
-        filename = os.path.join(sd, filename)
+        filename = os.path.join(dir, 'A', filename)
         if not os.path.exists(filename):
             photo_only = True
             print "Cannot find personal record:", filename
-
     if headshot:
         print 'adding headshot "%s"' % headshot
         head = Image.open(headshot)

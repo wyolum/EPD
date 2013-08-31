@@ -74,7 +74,7 @@ def file_save_dialog():
     if fn:
         background.file_save(fn)
 
-def next(step=1):
+def next(event=None, step=1):
     current = background.get_current()
     if hasattr(current, 'fn') and current.fn is not None:
         abspath = os.path.abspath(current.fn)
@@ -94,15 +94,16 @@ def next(step=1):
     else:
         i = 0
     background.delete_all()
-    foreground = WIF(files[i], background)
-    foreground.select()
+    if i < len(files):
+        foreground = WIF(files[i], background)
+        foreground.select()
     
 def curry(func, *args, **kw):
     '''
     function wrapper for use in call back
     '''
-    def out():
-        func(*args, **kw)
+    def out(event=None):
+        func(event, *args, **kw)
     return out
 
 def towif(im, outfn):
@@ -151,6 +152,37 @@ class WIF:
             except IOError:
                 raise
 
+    def rotate_image(self, event=None):
+        child = self.get_selected()
+        if child:
+            try:
+                child.image1 = child.image1.rotate(90, expand=1)
+                background.show()
+            except IOError:
+                raise
+
+    def flip_h_image(self, event=None):
+        child = self.get_selected()
+        if child:
+            try:
+                child.image1 = child.image1.transpose(Image.FLIP_LEFT_RIGHT)
+                background.show()
+            except IOError:
+                raise
+
+    def flip_v_image(self, event=None):
+        child = self.get_selected()
+        if child:
+            try:
+                child.image1 = child.image1.transpose(Image.FLIP_TOP_BOTTOM)
+                background.show()
+            except IOError:
+                raise
+    def nudge(self, event=None, x=0, y=0):
+        child = self.get_selected()
+        if child:
+            child.move(dx=x, dy=y)
+
     def ctrl_c(self, event):
         global tempf
         child = self.get_selected()
@@ -185,13 +217,13 @@ class WIF:
         if not out:
             ## event is not handled.  see if it is an vi edit command
             if event.char == 'i':
-                wtext = WText(background, '', unifont_f=True, bigascii=False)
+                wtext = WText(event, parent=background, text='', unifont_f=True, bigascii=False)
                 out = True
             elif event.char == 'I':
-                wtext = WText(background, '', unifont_f=True, bigascii=True)
+                wtext = WText(event, parent=background, text='', unifont_f=True, bigascii=True)
                 out = True
             elif event.char == 'T':
-                wtext = WText(background, '', unifont_f=False)
+                wtext = WText(event, parent=background, text='', unifont_f=False)
                 out = True
         return out
 
@@ -279,17 +311,17 @@ class WIF:
         return out
     canvas = property(getCanvas)
 
-    def set_area(self, area):
-        self.canvas.delete("active")
-        self.active_region = area
-        self.active_region_id = canvas.create_rectangle(self.active_region, tags=("rect", "active"))
-        ar_p1 = list(self.active_region)
-        ar_p1[0] -= 1
-        ar_p1[1] -= 1
-        ar_p1[2] += 1
-        ar_p1[3] += 1
-        self.active_region_id = canvas.create_rectangle(ar_p1, tags=("rect", "active"), outline='white')
-
+    def set_area(self, event=None, area=None):
+        if area is not None:
+            self.canvas.delete("active")
+            self.active_region = area
+            self.active_region_id = canvas.create_rectangle(self.active_region, tags=("rect", "active"))
+            ar_p1 = list(self.active_region)
+            ar_p1[0] -= 1
+            ar_p1[1] -= 1
+            ar_p1[2] += 1
+            ar_p1[3] += 1
+            self.active_region_id = canvas.create_rectangle(ar_p1, tags=("rect", "active"), outline='white')
     def equalize(self):
         if self.image1 is not None:
             contr = ImageEnhance.Contrast(self.image1)
@@ -489,8 +521,8 @@ class WIF:
             self.contrast  = data[0]['contrast']
             self.brightness = data[0]['brightness']
             self.scale = self.sscale = data[0]['sscale']
-            self.pos = (current_event.x - self.image1.size[0] * self.scale / 2, 
-                        current_event.y - self.image1.size[1] * self.scale / 2)
+            self.pos = (int(current_event.x - self.image1.size[0] * self.scale / 2), 
+                        int(current_event.y - self.image1.size[1] * self.scale / 2))
             #'pos':(event.mouse.x, event.mous.y)            
             prescaled = True
             
@@ -549,7 +581,7 @@ class WIF:
             self.scale = 1.
             self.pos = ((W - x)/2, (H - y)/2)
         if prescaled:
-            print 'prescaled', self.pos, self.sscale
+            # print 'prescaled', self.pos, self.sscale
             pass
         else:
             self.contrast = 1.
@@ -606,7 +638,7 @@ class WIF:
             pass 
 
 class WText(WIF):
-    def __init__(self, parent, text='', unifont_f=True, bigascii=False):
+    def __init__(self, event, parent, text='', unifont_f=True, bigascii=False):
         self.text=text
         self.unifont_f = unifont_f
         self.bigascii = bigascii ## needed for self.size
@@ -709,6 +741,13 @@ canvas.bind('<B3-Motion>', background.resize)
 canvas.bind('<ButtonRelease-1>', background.release_event)
 canvas.bind('<ButtonRelease-3>', background.save_scale)
 root.bind('<Control-i>', background.invert_image)
+root.bind('<Control-r>', background.rotate_image)
+root.bind('<Control-u>', background.flip_v_image)
+root.bind('<Control-h>', background.flip_h_image)
+root.bind('<Shift-Up>', curry(background.nudge, y=-1))
+root.bind('<Shift-Down>', curry(background.nudge, y=1))
+root.bind('<Shift-Left>', curry(background.nudge, x=-1))
+root.bind('<Shift-Right>', curry(background.nudge, x=1))
 root.bind('<Control-c>', background.ctrl_c)
 root.bind('<Control-v>', background.ctrl_v)
 root.bind('<Control-a>', printstack)
@@ -752,23 +791,34 @@ menubar.add_cascade(label="File", menu=fileMenu)
 
 editMenu = Tkinter.Menu(menubar)
 editMenu.add_command(label="Invert (Ctrl-i)", command=background.invert_image)
+editMenu.add_command(label="Rotate (Ctrl-r)", command=background.rotate_image)
+editMenu.add_command(label="Flip V (Ctrl-u)", command=background.flip_v_image)
+editMenu.add_command(label="Flip H (Ctrl-h)", command=background.flip_h_image)
+editMenu.add_command(label="Nudge Up (Shift-Up)", command=curry(background.nudge, y=-1))
+editMenu.add_command(label="Nudge Down (Shift-Down)", command=curry(background.nudge, y=1))
+editMenu.add_command(label="Nudge Left (Shift-Left)", command=curry(background.nudge, x=-1))
+editMenu.add_command(label="Nudge Up (Shift-Right)", command=curry(background.nudge, x=1))
 menubar.add_cascade(label="Edit", menu=editMenu)
+root.bind('<Shift-Up>', curry(background.nudge, y=-1))
+root.bind('<Shift-Down>', curry(background.nudge, y=1))
+root.bind('<Shift-Left>', curry(background.nudge, x=-1))
+root.bind('<Shift-Right>', curry(background.nudge, x=1))
 
 sizeMenu = Tkinter.Menu(menubar)
-sizeMenu.add_command(label="EPD_LARGE", command=curry(background.set_area, EPD_LARGE))
-sizeMenu.add_command(label="EPD_MED", command=curry(background.set_area, EPD_MED))
-sizeMenu.add_command(label="EPD_SMALL", command=curry(background.set_area, EPD_SMALL))
-sizeMenu.add_command(label="HEAD_SHOT", command=curry(background.set_area, HEAD_SHOT))
+sizeMenu.add_command(label="EPD_LARGE", command=curry(background.set_area, area=EPD_LARGE))
+sizeMenu.add_command(label="EPD_MED", command=curry(background.set_area, area=EPD_MED))
+sizeMenu.add_command(label="EPD_SMALL", command=curry(background.set_area, area=EPD_SMALL))
+sizeMenu.add_command(label="HEAD_SHOT", command=curry(background.set_area, area=HEAD_SHOT))
 menubar.add_cascade(label="Size", menu=sizeMenu)
 
 insertMenu = Tkinter.Menu(menubar)
 insertMenu.add_command(label="Image", command=file_import_dialog)
-insertMenu.add_command(label="Big ASCII Text (I)", command=curry(WText, background, '', unifont_f=True, bigascii=True))
-insertMenu.add_command(label="Unifont Text (i)", command=curry(WText, background, '', unifont_f=True, bigascii=False))
-insertMenu.add_command(label="5x7 Text",  command=curry(WText, background, '', unifont_f=False, bigascii=False))
-insertMenu.add_command(label="4x4 Text")
+insertMenu.add_command(label="Big ASCII Text (I)", command=curry(WText, parent=background, text='', unifont_f=True, bigascii=True))
+insertMenu.add_command(label="Unifont Text (i)", command=curry(WText, parent=background, text='', unifont_f=True, bigascii=False))
+insertMenu.add_command(label="5x7 Text",  command=curry(WText, parent=background, text='', unifont_f=False, bigascii=False))
+insertMenu.add_command(label="4x4 Text (not implimented)")
 menubar.add_cascade(label="Insert", menu=insertMenu)
 
-background.set_area(EPD_LARGE)
+background.set_area(area=EPD_LARGE)
 background.show()
 root.mainloop()    
