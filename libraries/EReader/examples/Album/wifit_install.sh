@@ -1,6 +1,6 @@
 #!/bin/sh
 
-wifit=wifit.0.0.2
+wifit=wifit.0.0.3
 sudo apt-get install python
 sudo apt-get install python-imaging
 sudo apt-get install python-numpy
