@@ -4,6 +4,7 @@ from custom_page import *
 import getpass
 import glob
 import subprocess
+import serial
 
 SD_PATH = '/media/usb'
 SD_PATH = '.' 
@@ -39,7 +40,10 @@ def next_filename():
 
 def pi_snap():
     img_filename = next_filename()
-    subprocess.call(["raspistill", '-o', img_filename])
+    print img_filename
+    cmd = 'raspistill -o ' + img_filename + ' -w '+ str(HEADSHOT_WIDTH) + \
+          ' -h ' + str(HEADSHOT_HEIGHT)
+    subprocess.call(cmd, shell=True)
     ### need to resize prolly
     return Image.open(img_filename)
     
@@ -58,8 +62,17 @@ def snap(filename="photo.png", bb=HEADSHOT_BB):
         im = pi_snap()
     else:
         im = laptop_snap()
-    im = im.crop(bb)
+#    im = im.crop(bb)
     im.save(filename)
     create_frontpage(SD_PATH, ALBUM, "person.csv", headshot=filename)
 
-snap()
+ser = serial.Serial('/dev/ttyS0',19200)
+
+while True:
+    command = ser.readline()
+    if ('snap' in command):
+        snap()
+    else:
+        print 'command:'+command+';' 
+
+
