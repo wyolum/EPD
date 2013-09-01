@@ -7,8 +7,8 @@ import subprocess
 import serial
 
 SD_PATH = '/media/usb'
-SD_PATH = '.' 
-ALBUM = 'ALBUM'
+#SD_PATH = '.' 
+ALBUM = 'ALBUM/A'
 ARCHIVE = 'photos'
 
 START_X = 175

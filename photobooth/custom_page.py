@@ -129,13 +129,14 @@ def create_frontpage(sd, alb='ALBUM/A', filename=None, headshot=None,
         headshot = 'DEFAULT_HEADSHOT.png'
     ### Custom Page    
     dir = os.path.join(sd, alb)
+    print "%s is the path"% dir
     if not os.path.exists(dir):
         print "%s not present" % alb
         dir = '.'
     if filename is None:
         photo_only = True
     else:
-        filename = os.path.join(dir, 'A', filename)
+        filename = os.path.join(dir, filename)
         if not os.path.exists(filename):
             photo_only = True
             print "Cannot find personal record:", filename
