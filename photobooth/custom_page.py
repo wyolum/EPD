@@ -89,8 +89,11 @@ class Attendee:
             out.append('Poster')
         if self.press:
             out.append('Press')
+        if self.company:
+            out.append(self.company)
         return out
     roles = property(getRoles)
+
     def qr(self):
         try:
             return qrcode.make(str(self))
@@ -129,14 +132,15 @@ def create_frontpage(sd, alb='ALBUM/A', filename=None, headshot=None,
         headshot = 'DEFAULT_HEADSHOT.png'
     ### Custom Page    
     dir = os.path.join(sd, alb)
-    print "%s is the path"% dir
+    image_dir = os.path.join(dir, 'A')
+
     if not os.path.exists(dir):
         print "%s not present" % alb
         dir = '.'
     if filename is None:
         photo_only = True
     else:
-        filename = os.path.join(dir, filename)
+        filename = os.path.join(dir, 'A', filename)
         if not os.path.exists(filename):
             photo_only = True
             print "Cannot find personal record:", filename
@@ -178,8 +182,8 @@ def create_frontpage(sd, alb='ALBUM/A', filename=None, headshot=None,
 
         frontpage.im.paste(image2, ((NAME_W - size[0]) / 2, 176 - 24 ), 0)
         frontpage.addBreadCrumb(0, 0, 0, 0, BREADCRUMB_SHAPE)
-    frontpage.saveas(os.path.join(dir, 'A.WIF'))
-    frontpage.show()
-    print photo_only, headshot_bbox
+    frontpage.saveas(os.path.join(image_dir, 'A.WIF'))
+    # frontpage.show()
+    return frontpage
 # create_frontpage('.', alb='ALBUM/A', filename='person.csv', headshot='DEFAULT_HEADSHOT.png')
 # create_frontpage('.', headshot='DEFAULT_HEADSHOT.png')                )

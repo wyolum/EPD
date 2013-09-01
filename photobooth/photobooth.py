@@ -1,3 +1,5 @@
+import time
+import sys
 import os
 import os.path
 from custom_page import *
@@ -6,9 +8,18 @@ import glob
 import subprocess
 import serial
 
-SD_PATH = '/media/usb'
-#SD_PATH = '.' 
-ALBUM = 'ALBUM/A'
+## change this based on your sd card
+DEVICE_ID = '9016-4EF8'
+
+def ispi():
+    return getpass.getuser() == 'pi'
+
+if ispi():
+    SD_PATH = '/media/%s/' % DEVICE_ID
+else:
+    SD_PATH = '/media/9016-4EF8/'
+        
+ALBUM = 'ALBUM'
 ARCHIVE = 'photos'
 
 START_X = 175
@@ -29,8 +40,6 @@ def sd_umount():
     if sd_present():
         subprocess.call(['umount', SD_PATH])
 
-def ispi():
-    return getpass.getuser() == 'pi'
 
 def next_filename():
     if not os.path.exists(ARCHIVE):
@@ -47,14 +56,19 @@ def pi_snap():
     ### need to resize prolly
     return Image.open(img_filename)
     
+cam = None
 def laptop_snap():
+    global cam
     import pygame.camera
-    pygame.camera.init()
-    cam = pygame.camera.Camera(pygame.camera.list_cameras()[0])
+    if cam is None:
+        pygame.camera.init()
+        cam = pygame.camera.Camera(pygame.camera.list_cameras()[0])
     cam.start()
+    
     img = cam.get_image()
     imgstr = pygame.image.tostring(img, 'RGB')
     im = Image.fromstring('RGB', img.get_size(), imgstr)
+    cam.stop()
     return im
 
 def snap(filename="photo.png", bb=HEADSHOT_BB):
@@ -62,17 +76,43 @@ def snap(filename="photo.png", bb=HEADSHOT_BB):
         im = pi_snap()
     else:
         im = laptop_snap()
-#    im = im.crop(bb)
+    im = im.crop(bb)
     im.save(filename)
-    create_frontpage(SD_PATH, ALBUM, "person.csv", headshot=filename)
+    return create_frontpage(SD_PATH, ALBUM, "person.csv", headshot=filename)
 
-ser = serial.Serial('/dev/ttyS0',19200)
+def findser():
+    if ispi():
+        ser = serial.Serial('/dev/ttyS0',19200, timeout=.1)
+        print 'using AlaMode'
+    else:
+        if os.path.exists("/dev/ttyUSB0"):
+            ser = serial.Serial("/dev/ttyUSB0", 19200, timeout=1)
+        elif os.path.exists("/dev/ttyACM0"):
+            ser = serial.Serial("/dev/ttyACM0", 19200, timeout=1)
+        else:
+            ser = sys.stdin
+    return ser
 
-while True:
+def loop():
+    if not sd_present():
+        print 'insert SD card'
+    while not sd_present():
+        time.sleep(1)
+    print 'Press button when ready'
+
+    ser = findser()
     command = ser.readline()
     if ('snap' in command):
         snap()
     else:
-        print 'command:'+command+';' 
+        print 'command garbled:', command, ';' 
+    sd_umount()
 
+def main():
+    while 1:
+        loop()
+
+
+if __name__ == "__main__":
+    main()
 
