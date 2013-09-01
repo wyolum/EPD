@@ -24,9 +24,9 @@ def check_and_snap():
 
     can.delete("text")
     if not sd_present():
-        tid = can.create_text(WIDTH/2, HEIGHT - 65, text="Insert SD card", font=("times", 50), tags="text")
+        tid = can.create_text(WIDTH/2, HEIGHT - 85, text="Insert SD card", font=("times", 50), tags="text")
     else:
-        tid = can.create_text(WIDTH/2, HEIGHT - 65, text="Press button when ready", font=("times", 50), tags="text")
+        tid = can.create_text(WIDTH/2, HEIGHT - 85, text="Press button when ready", font=("times", 50), tags="text")
         can.update()
         command = ser.readline().strip()
         if command == "snap":
@@ -58,11 +58,10 @@ w, h = root.winfo_screenwidth(), root.winfo_screenheight()
 root.geometry("%dx%d+0+0" % (WIDTH, HEIGHT))
 root.focus_set() # <-- move focus to this widget
 frame = Frame(root)
-Button(frame, text="Exit", command=quit).pack(side=LEFT)
+#Button(frame, text="Exit", command=quit).pack(side=LEFT)
 frame.pack()
-
 can = Canvas(root, width=WIDTH, height=HEIGHT)
 can.pack()
 root.after(100, check_and_snap)
-
+root.wm_title("Wyolum Photobooth")
 root.mainloop()

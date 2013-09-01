@@ -11,6 +11,7 @@ import serial
 ## change this based on your sd card
 DEVICE_ID = '9016-4EF8'
 
+
 def ispi():
     return getpass.getuser() == 'pi'
 
@@ -76,7 +77,7 @@ def snap(filename="photo.png", bb=HEADSHOT_BB):
         im = pi_snap()
     else:
         im = laptop_snap()
-    im = im.crop(bb)
+#    im = im.crop(bb)
     im.save(filename)
     return create_frontpage(SD_PATH, ALBUM, "person.csv", headshot=filename)
 
