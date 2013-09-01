@@ -8,11 +8,14 @@ import glob
 import subprocess
 import serial
 
+## change this based on your sd card
+DEVICE_ID = '9016-4EF8'
+
 def ispi():
     return getpass.getuser() == 'pi'
 
 if ispi():
-    SD_PATH = '/media/usb'
+    SD_PATH = '/media/%s/' % DEVICE_ID
 else:
     SD_PATH = '/media/9016-4EF8/'
         
@@ -79,7 +82,8 @@ def snap(filename="photo.png", bb=HEADSHOT_BB):
 
 def findser():
     if ispi():
-        ser = serial.Serial('/dev/ttyS0',19200, timeout=1)
+        ser = serial.Serial('/dev/ttyS0',19200, timeout=.1)
+        print 'using AlaMode'
     else:
         if os.path.exists("/dev/ttyUSB0"):
             ser = serial.Serial("/dev/ttyUSB0", 19200, timeout=1)
