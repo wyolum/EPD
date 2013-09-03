@@ -104,7 +104,10 @@ class WIF:
         self.im.show()
     
     def saveas(self, fn):
-        towif(self.im, fn, WIDTH, HEIGHT)
+        if fn.upper().endswith('WIF'):
+            towif(self.im, fn, WIDTH, HEIGHT)
+        else:
+            self.im.save(fn)
         print 'wrote', fn
 
     def rotate180(self):

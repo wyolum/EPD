@@ -198,6 +198,7 @@ for person in people[:]:
     for i, page in enumerate(pages):
         page.addBreadCrumb(0, 0, 0, i, BREADCRUMB_SHAPE)
         page.saveas(os.path.join(dir, chr(ord('A') + i) + '.WIF'))
+        page.saveas(os.path.join(dir, chr(ord('A') + i) + '.png'))
     fn = os.path.join(dir, 'person.csv')
     person.makecsv(fn)
     # page.show()
