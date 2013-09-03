@@ -7,6 +7,7 @@ HEIGHT = 800
 SCALE = 4
 
 root = Tk()
+Button_enabled = False
 
 def quit():
     root.destroy()
@@ -20,7 +21,7 @@ def interrupted(signum, frame):
 signal.signal(signal.SIGALRM, interrupted)
 
 def check_and_snap():
-    global im, wiftk
+    global im, wiftk, Button_enabled
 
     can.delete("text")
     if not sd_present():
@@ -28,8 +29,15 @@ def check_and_snap():
     else:
         tid = can.create_text(WIDTH/2, HEIGHT - 85, text="Press button when ready", font=("times", 50), tags="text")
         can.update()
+        if (Button_enabled == False):
+            ser.write('e') #enable button
+            Button_enabled = True
         command = ser.readline().strip()
         if command == "snap":
+            can.delete("text")
+            tid = can.create_text(WIDTH/2, HEIGHT - 85, text="Processing Image", font=("times", 50), tags="text")
+            can.update()
+            Button_enabled = False
             im = snap().im
             x, y = im.size
             x *= SCALE
