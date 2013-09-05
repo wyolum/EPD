@@ -169,9 +169,9 @@ void setup() {
   int n = strlen(ROOT_DIR);
   bool done = false;
 
-  Serial.begin(115200);
-  Serial.println("WyoLum, LLC 2013");
-  Serial.println("Buy Open Source Hardware!");
+  //Serial.begin(115200);
+  //Serial.println("WyoLum, LLC 2013");
+  //Serial.println("Buy Open Source Hardware!");
   ereader.setup(EPD_2_7); // starts SD
   pinMode(UP_PIN, INPUT);
   pinMode(DOWN_PIN, INPUT);
@@ -180,8 +180,8 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   root = SD.open(ROOT_DIR);
   if(!root){
-    Serial.print("Root not found:\n    ");
-    Serial.println(ROOT_DIR);
+    // Serial.print("Root not found:\n    ");
+    // Serial.println(ROOT_DIR);
     ereader.error(SD_ERROR_CODE);
   }
   get_cwd_path();
@@ -278,15 +278,15 @@ void loop() {
   if ((current - lastWakeTime) > FOCUSTIME && ereader.attached){
     digitalWrite(LED_PIN, LOW);
     ereader.spi_detach(); // this call takes .8 seconds to execute!
-    Serial.println("ereader detached");
+    // Serial.println("ereader detached");
   }
   else if ((current - lastWakeTime) > AWAKETIME){
- //   Serial.println("should sleep");
+    //   Serial.println("should sleep");
     goToSleep();
   }
   
 
-  ser_interact();
+  // ser_interact();
   if(analogRead(MODE_PIN) > 512){
 //    Serial.println("Mode");
     prev_wif();
@@ -424,7 +424,7 @@ void goToSleep(){
 void wake()
 {
   // apparently the uart takes a while to reconfigure on waking up
-   Serial.begin(115200);
+  // Serial.begin(115200);
   delay(100); // crude debounce
 }
 

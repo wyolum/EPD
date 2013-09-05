@@ -7,9 +7,23 @@ import getpass
 import glob
 import subprocess
 import serial
+import ImageEnhance
 
 ## change this based on your sd card
 DEVICE_ID = '9016-4EF8'
+
+CONTRAST = 1.  ## 0.. 5 float
+BRIGHT = 1.    ## -5..5 float
+
+def equalize(image1, contrast, brightness):
+    contr = ImageEnhance.Contrast(image1)
+    image = contr.enhance(contrast)
+    bright = ImageEnhance.Brightness(image)
+    image = bright.enhance(brightness)
+    image = image.resize((int(image.size[0]), 
+                          int(image.size[1])))
+    out = image.convert('1')
+    return out
 
 
 def ispi():
@@ -78,6 +92,7 @@ def snap(filename="photo.png", bb=HEADSHOT_BB):
     else:
         im = laptop_snap()
 #    im = im.crop(bb)
+    im = equalize(im, CONTRAST, BRIGHT)
     im.save(filename)
     return create_frontpage(SD_PATH, ALBUM, "person.csv", headshot=filename)
 
@@ -107,6 +122,7 @@ def loop():
         snap()
     else:
         print 'command garbled:', command, ';' 
+    time.sleep(.1)
     sd_umount()
 
 def main():

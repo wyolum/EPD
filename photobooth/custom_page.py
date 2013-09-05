@@ -183,6 +183,7 @@ def create_frontpage(sd, alb='ALBUM/A', filename=None, headshot=None,
         frontpage.im.paste(image2, ((NAME_W - size[0]) / 2, 176 - 24 ), 0)
         frontpage.addBreadCrumb(0, 0, 0, 0, BREADCRUMB_SHAPE)
     frontpage.saveas(os.path.join(image_dir, 'A.WIF'))
+    frontpage.saveas(os.path.join(image_dir, 'A.png'))
     # frontpage.show()
     return frontpage
 # create_frontpage('.', alb='ALBUM/A', filename='person.csv', headshot='DEFAULT_HEADSHOT.png')
