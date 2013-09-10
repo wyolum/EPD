@@ -12,7 +12,7 @@ WHITE = 255
 BLACK = 0
 BREADCRUMB_SIZE = 2
 
-FONT_NAME = 'Orbi1tron' # 'Ovo' # 'Ubuntu'
+FONT_NAME = 'Orbitron' # 'Ovo' # 'Ubuntu'
 FONT_STYLE = 'Regular'
 FONT_DIR = '/home/justin/Dropbox/WyoLumCode/fonts/'
 NAME_FONT_SIZE = 35
@@ -32,49 +32,13 @@ class WIF:
         self.im.paste(img, box)
 
     def addUnifont(self, txt, x, y, **kw):
-        unifont.addText(txt, self.im, x, y, wff_file=self.wff_file, **kw)
+        unifont.addText(txt, self.im, x, y, self.wff_file, **kw)
 
     def add_7x5_txt(self, txt, x, y, **kw):
         ascii_5x7.addText(txt, self.im, x, y, **kw)
         
-    def addText(self, txt, x, y, 
-                font_size=NORMAL_FONT_SIZE, 
-                font=FONT_NAME, 
-                font_style=FONT_STYLE, 
-                color=BLACK,
-                valign='top',
-                halign='left'):
-        if font_style:
-            ttf = '%s%s-%s.ttf' % (FONT_DIR, font, font_style)
-        else:
-            ttf = '%s%s.ttf' % (FONT_DIR, font)
-        font = ImageFont.truetype(ttf, font_size)
-        text_size = self.draw.textsize(txt, font)
-        if text_size[0] > WIDTH:
-            txt = txt.split()
-            txt = txt[0] + ' ' + txt[-1][0] + '.'
-            text_size = self.draw.textsize(txt, font)
-        if valign == 'top':
-            pass
-        elif valign == 'center':
-            y -= text_size[1] // 2
-        elif valign == 'bottom':
-            y -= text_size[1]
-        else:
-            raise ValueError('Unknown option for valign:"%s"' % valgin)
-        if halign == 'left':
-            pass
-        elif halign == 'center':
-            x -= text_size[0] // 2
-        elif halign == 'right':
-            x -= text_size[0]
-        else:
-            raise ValueError('Unknown option for halign:"%s"' % halgin)
-            
-        self.draw.text((x, y), txt, color, font=font)
-    
     def addBreadCrumb(self, x, y, row, col, shape, color=BLACK):
-        startx = WIDTH - (max(shape) + 1) * BREADCRUMB_SIZE
+        startx = WIDTH - max(shape) * BREADCRUMB_SIZE
         starty = HEIGHT - len(shape) * BREADCRUMB_SIZE
         for i, n_col in enumerate(shape):
             for j in range(n_col):
@@ -104,7 +68,7 @@ class WIF:
         self.im.show()
     
     def saveas(self, fn):
-        if fn.upper().endswith('WIF'):
+        if fn.upper().endswith(".WIF"):
             towif(self.im, fn, WIDTH, HEIGHT)
         else:
             self.im.save(fn)

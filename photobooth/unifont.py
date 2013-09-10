@@ -191,7 +191,10 @@ def calcsize(text, bigascii=False, wff_file=UNIFONT_FILE):
             x += dat.shape[1]
     return x, y
 
-def addText(text, im, x, y, bigascii=False, wff_file=UNIFONT_FILE):
+LEFT = 0
+CENTER = 1
+RIGHT = 2
+def addText(text, im, x, y, wff_file=UNIFONT_FILE, bigascii=False):
     '''
     paste an image of text into im at position x, y.
     if bigascii == True, then use large chars near end of UNIFONT file
