@@ -12,7 +12,7 @@ WHITE = 255
 BLACK = 0
 BREADCRUMB_SIZE = 2
 
-FONT_NAME = 'Orbitron' # 'Ovo' # 'Ubuntu'
+FONT_NAME = 'Orbi1tron' # 'Ovo' # 'Ubuntu'
 FONT_STYLE = 'Regular'
 FONT_DIR = '/home/justin/Dropbox/WyoLumCode/fonts/'
 NAME_FONT_SIZE = 35
@@ -32,7 +32,7 @@ class WIF:
         self.im.paste(img, box)
 
     def addUnifont(self, txt, x, y, **kw):
-        unifont.addText(txt, self.im, x, y, self.wff_file, **kw)
+        unifont.addText(txt, self.im, x, y, wff_file=self.wff_file, **kw)
 
     def add_7x5_txt(self, txt, x, y, **kw):
         ascii_5x7.addText(txt, self.im, x, y, **kw)

@@ -1,0 +1,13 @@
+cid   desc            data
+0     NOT VALID       
+1     splash screen   NA
+2     ASCII           XY two bytes, color, ascii data 27 bytes
+3     unicode         XY two bytes, color, unicode data 26 bytes (13 char)
+4     image           XY two bytes, path 28 bytes
+5     line            XY start, XY stop, color
+6     rectangle       XY upper left, XY lower right, color, fill
+7     ellipse         XY upper left, XY lower right, color, fill
+8     cd              28 bytes path
+9     clear           NA
+
+XY two bytes.  Treat as an unsigned integer: row = xy / WIDTH, col = xy % WIDTH
