@@ -238,6 +238,7 @@ void EReader::togglepix(uint16_t x, uint16_t y){
   }
 }
 
+
 // set a pixel to a value
 void EReader::setpix(uint16_t x, uint16_t y, bool val){
   // toggle pixel located at x, y
@@ -294,6 +295,17 @@ void EReader::draw_line(int16_t startx, int16_t starty, int16_t stopx, int16_t s
     }
     lastx = x;
     lasty = y;
+  }
+}
+  
+// display a line from start to stop in specified color: true=black, false=white
+void EReader::draw_vline(int16_t x, int16_t starty, int16_t stopy, bool color, uint8_t thickness){
+  float dy = (stopy - starty);
+
+  for(int16_t y = starty; y < stopy; y++){
+    for(int16_t i = 0; i < thickness; i++){
+      setpix(x + i, y, color);
+    }
   }
 }
   

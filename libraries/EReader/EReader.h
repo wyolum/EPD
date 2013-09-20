@@ -111,6 +111,9 @@ class EReader{
 
   // display a line from start to stop in specified color: true=black, false=white
   void draw_line(int16_t startx, int16_t starty, int16_t stopx, int16_t stopy, bool color);
+
+  // display a vertical from start to stop in specified color: true=black, false=white thickness pixels thick
+  void draw_vline(int16_t x, int16_t starty, int16_t stopy, bool color, uint8_t thickness);
   
   // draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
   // toggle each pix on ellipse
