@@ -607,7 +607,7 @@ uint16_t EReader::put_ascii(uint16_t x, uint16_t y, char * ascii, bool color){
 }
 
 /*
-  put ASCII string at location x, y
+  put ASCII string in 16x16 font at location x, y
  */
 uint16_t EReader::put_bigascii(uint16_t x, uint16_t y, char *ascii, bool color){
   for(uint8_t i = 0; ascii[i] > 0; i++){
