@@ -169,9 +169,9 @@ void setup() {
   int n = strlen(ROOT_DIR);
   bool done = false;
 
-  //Serial.begin(115200);
-  //Serial.println("WyoLum, LLC 2013");
-  //Serial.println("Buy Open Source Hardware!");
+  // Serial.begin(115200);
+  // Serial.println("WyoLum, LLC 2013");
+  // Serial.println("Buy Open Source Hardware!");
   ereader.setup(EPD_2_7); // starts SD
   pinMode(UP_PIN, INPUT);
   pinMode(DOWN_PIN, INPUT);
@@ -180,8 +180,8 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   root = SD.open(ROOT_DIR);
   if(!root){
-    // Serial.print("Root not found:\n    ");
-    // Serial.println(ROOT_DIR);
+    //Serial.print("Root not found:\n    ");
+    //Serial.println(ROOT_DIR);
     ereader.error(SD_ERROR_CODE);
   }
   get_cwd_path();
@@ -379,7 +379,7 @@ void SD_reader(void *buffer, uint32_t address, uint16_t length){
   //*** file operations above may have changed SPI mode
 }
 
-void goToSleep(){ 
+void goToSleep(){
   digitalWrite(LED_PIN, LOW);
 //  ereader.spi_detach();
   // ereader.EPD.end();   // make sure EPD panel is off

@@ -600,9 +600,18 @@ bool EReader::char_is_blank(uint32_t unic){
   put ASCII string at location x, y
  */
 uint16_t EReader::put_ascii(uint16_t x, uint16_t y, char * ascii, bool color){
-  char c = 'A';
   for(uint8_t i = 0; ascii[i] > 0; i++){
     x += put_char(x, y, ascii[i], color);
+  }
+  return x;
+}
+
+/*
+  put ASCII string at location x, y
+ */
+uint16_t EReader::put_bigascii(uint16_t x, uint16_t y, char *ascii, bool color){
+  for(uint8_t i = 0; ascii[i] > 0; i++){
+    x += put_char(x, y, (uint16_t)ascii[i] + BIGTEXT_OFFSET, color);
   }
   return x;
 }

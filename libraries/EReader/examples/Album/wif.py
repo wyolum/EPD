@@ -12,7 +12,7 @@ WHITE = 255
 BLACK = 0
 BREADCRUMB_SIZE = 2
 
-FONT_NAME = 'Orbi1tron' # 'Ovo' # 'Ubuntu'
+FONT_NAME = 'Orbitron' # 'Ovo' # 'Ubuntu'
 FONT_STYLE = 'Regular'
 FONT_DIR = '/home/justin/Dropbox/WyoLumCode/fonts/'
 NAME_FONT_SIZE = 35
@@ -48,6 +48,7 @@ class WIF:
             ttf = '%s%s-%s.ttf' % (FONT_DIR, font, font_style)
         else:
             ttf = '%s%s.ttf' % (FONT_DIR, font)
+        print ttf
         font = ImageFont.truetype(ttf, font_size)
         text_size = self.draw.textsize(txt, font)
         if text_size[0] > WIDTH:

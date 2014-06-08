@@ -61,14 +61,19 @@ def create_sched(filename):
                 
     closewif(page, page_no)
 create_sched('schedule.txt')
+
+#OHS2013
 BREADCRUMB_SHAPE = [3, 
                     len(glob.glob(os.path.join(SPONSOR_DIR, '[A-Z].png'))),
                     len(glob.glob(os.path.join(SCHEDULE_DIR, '[A-Z].png'))),
                     ]   ### 3 rows of images: 3 images is first row, 5 in next, 3 in last
+## Makerfest
+BREADCRUMB_SHAPE = [3, 1]
 class Attendee:
     def __init__(self, line, header):
         self.line = [cell.strip() for cell in line]
         self.header = [h.lower().strip() for h in header]
+        self.line = self.line + [''] * (len(self.header) - len(self.line))
         self.dat = dict(zip(self.header, self.line))
         self.name = '%s %s' % (self.dat['attendee first name'],
                                self.dat['attendee last name'])
@@ -90,6 +95,7 @@ class Attendee:
         return '\n'.join([self.name, self.email, self.phone, self.website])
 
     def getHeadshot(self):
+        
         if self.dat['headshot'] and os.path.exists(os.path.join(HEADSHOT_DIR, self.dat['headshot'])):
             out = self.dat['headshot']
         elif os.path.exists(os.path.join(HEADSHOT_DIR, '_'.join(self.name.lower().split()) + '.png')):
@@ -147,7 +153,7 @@ def wif_directory(dir, level, rotate=False):
         fn = OUTPUT_DIR + chr(ord('A') + level) + '/' + fn[0] + '.WIF'
         page.saveas(fn)
 wif_directory(SPONSOR_DIR, 1)
-wif_directory(SCHEDULE_DIR, 2, rotate=True)
+# wif_directory(SCHEDULE_DIR, 2, rotate=True)
 
 def copy_dir(source, dest):
     if os.path.exists(dest):
@@ -157,6 +163,7 @@ def copy_dir(source, dest):
 
 ### Custom Pages    
 FILENAME = 'attendees1.csv'
+FILENAME = 'MakerFest_BADGEr_List.csv'
 people = list(csv.reader(open(FILENAME)))
 header = people[0]
 people = people[1:]
@@ -182,10 +189,9 @@ for person in people[:]:
             # page.addUnifont(role, 0, 0 + i * 16 + 5, bigascii=False)
             # page.addText(role, 0, 10 + i * (NORMAL_FONT_SIZE + 5) + 5)
         page.addText(person.name, WIDTH/2, HEIGHT, font_size=NAME_FONT_SIZE, halign='center', valign='bottom')
-
     dir = CUSTOM_DIR + '%04d-%s/ALBUM/' % (int(person.id), '_'.join(person.name.split()))
     copy_dir(OUTPUT_DIR + 'B/', dir + 'B/')
-    copy_dir(OUTPUT_DIR + 'C/', dir + 'C/')
+    # copy_dir(OUTPUT_DIR + 'C/', dir + 'C/')
     if not(os.path.exists(dir)):
         os.mkdir(dir)
         dir = dir + 'A/'

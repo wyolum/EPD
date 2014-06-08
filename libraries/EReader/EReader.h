@@ -52,6 +52,7 @@ const int SD_CS = 9; // production
 
 const bool BLACK = true;
 const bool WHITE = false;
+const uint16_t BIGTEXT_OFFSET = 0xfee0;
 
 // error codes
 const uint8_t SD_ERROR_CODE = 0;
@@ -144,6 +145,11 @@ class EReader{
   put ASCII string at location x, y
  */
   uint16_t put_ascii(uint16_t x, uint16_t y, char * ascii, bool color);
+
+/*
+  put ASCII string at location x, y
+ */
+  uint16_t put_bigascii(uint16_t x, uint16_t y, char * ascii, bool color);
 
 /*
   put unicode string at location x, y
