@@ -249,7 +249,7 @@ void display(){
   wif = SD.open(path); 
   draw_img(wif); // draw new wif
   uint16_t start = millis();
-  // ereader.spi_detach(); // this call takes .8 seconds to execute!
+   ereader.spi_detach(); // this call takes .8 seconds to execute!
   if(true){
     for(int ii=0; ii<4; ii++){
       digitalWrite(LED_PIN, ii % 2 == 0 );
@@ -277,12 +277,12 @@ void loop() {
   long current = millis();
   if ((current - lastWakeTime) > FOCUSTIME && ereader.attached){
     digitalWrite(LED_PIN, LOW);
-    ereader.spi_detach(); // this call takes .8 seconds to execute!
+    //ereader.spi_detach(); // this call takes .8 seconds to execute!
     // Serial.println("ereader detached");
   }
   else if ((current - lastWakeTime) > AWAKETIME){
     //   Serial.println("should sleep");
-    goToSleep();
+    //goToSleep();
   }
   
 
@@ -329,7 +329,7 @@ void draw_img(File imgFile){
   ereader.EPD->frame_cb(0, SD_reader, EPD_inverse);
   reset_wif();
   ereader.EPD->frame_cb(0, SD_reader, EPD_normal);
-  //ereader.EPD->end();   // power down the EPD panel
+  ereader.EPD->end();   // power down the EPD panel
   
 }
 

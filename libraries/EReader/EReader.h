@@ -15,7 +15,7 @@
 #ifndef EREADER_H
 #define EREADER_H
 #include <inttypes.h>
-#include "EPD.h"
+#include "EPD_V2.h"
 #include "SD.h"
 
 // set HW_VERSION to 0 when following EPD schematic
@@ -73,14 +73,13 @@ class EReader{
  public:
   bool attached; // true if spi display is ready, false if "detached"
   bool initialized;
-  EPD_Class EPD;
   File display_file;
   File unifont_file;
   uint16_t epd_height;
   uint16_t epd_width;
   uint16_t epd_bytes;
   uint8_t unifont_data[UNIFONT_RECLEN - 1];
-
+  EPD_Class *EPD;
   // constructor
   EReader();
 

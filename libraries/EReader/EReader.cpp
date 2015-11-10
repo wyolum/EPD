@@ -13,7 +13,7 @@
 // governing permissions and limitations under the License.
 
 #include "EReader.h"
-#include "EPD.h"
+#include "EPD_v2.h"
 #include "S5813A.h"
 
 EReader::EReader(){
@@ -68,7 +68,7 @@ void EReader::spi_attach(){
     pinMode(MOSI, OUTPUT);	
     pinMode(MISO, INPUT);
     set_spi_for_epd();
-    EPD.begin(); // power up the EPD panel	
+    EPD->begin(); // power up the EPD panel	
     attached = true;
   }
 }
@@ -78,7 +78,7 @@ void EReader::spi_attach(){
  */
 void EReader::spi_detach(){
   if(attached){
-    EPD.end();
+    EPD->end();
     SPI.end();
     pinMode(SCK, OUTPUT);
     pinMode(MOSI, OUTPUT);
@@ -102,6 +102,7 @@ void EReader::setup(EPD_size size){
     // while(1); delay(100);
   }
 
+  EPD = new EPD_Class(size, EPD_PANEL_ON, EPD_BORDER, EPD_DISCHARGE, EPD_RESET, EPD_BUSY, EPD_EPD_CS);
 
   if(size == EPD_1_44){
     epd_width = 128L;
@@ -117,7 +118,7 @@ void EReader::setup(EPD_size size){
   }
   epd_bytes = (epd_width * epd_height / 8);
 
-  EPD.setup(size, EPD_PANEL_ON, EPD_BORDER, EPD_DISCHARGE, EPD_PWM, EPD_RESET, EPD_BUSY, EPD_EPD_CS);
+
   pinMode(EPD_PWM, OUTPUT);
   pinMode(EPD_BUSY, INPUT);
   pinMode(EPD_RESET, OUTPUT);
@@ -525,14 +526,14 @@ void EReader::_erase(){
   //*** maybe need to ensure clock is ok for EPD
   set_spi_for_epd();
 
-  EPD.begin(); // power up the EPD panel
+  EPD->begin(); // power up the EPD panel
 #ifdef SLOW
-  EPD.setFactor(temperature); // adjust for current temperature
-  EPD.frame_cb_repeat(0, reader_wrap, EPD_compensate);
-  EPD.frame_cb_repeat(0, reader_wrap, EPD_white);  
+  EPD->setFactor(temperature); // adjust for current temperature
+  EPD->frame_cb_repeat(0, reader_wrap, EPD_compensate);
+  EPD->frame_cb_repeat(0, reader_wrap, EPD_white);  
 #else
-  EPD.frame_cb(0, reader_wrap, EPD_compensate);
-  EPD.frame_cb(0, reader_wrap, EPD_white);  
+  EPD->frame_cb(0, reader_wrap, EPD_compensate);
+  EPD->frame_cb(0, reader_wrap, EPD_white);  
 #endif
 }
 
@@ -541,13 +542,13 @@ void EReader::_draw(){
   set_spi_for_epd();
 
 #ifdef SLOW
-  EPD.frame_cb_repeat(0, reader_wrap, EPD_inverse);
-  EPD.frame_cb_repeat(0, reader_wrap, EPD_normal);
+  EPD->frame_cb_repeat(0, reader_wrap, EPD_inverse);
+  EPD->frame_cb_repeat(0, reader_wrap, EPD_normal);
 #else
-  EPD.frame_cb(0, reader_wrap, EPD_inverse);
-  EPD.frame_cb(0, reader_wrap, EPD_normal);
+  EPD->frame_cb(0, reader_wrap, EPD_inverse);
+  EPD->frame_cb(0, reader_wrap, EPD_normal);
 #endif
-  // EPD.end();   // power down the EPD panel
+  // EPD->end();   // power down the EPD panel
 }
 
 uint16_t EReader::put_char(uint16_t x, uint16_t y, uint16_t unic, bool color){

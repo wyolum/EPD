@@ -20,7 +20,7 @@
 
 #include <SPI.h>
 #include <SD.h>
-#include "EPD.h"
+#include "EPD_V2.h"
 #include "EReader.h"
 
 // globals
@@ -317,10 +317,10 @@ void draw_img(File imgFile){
   //*** maybe need to ensure clock is ok for EPD
 
   reset_wif();
-  ereader.EPD.frame_cb(0, SD_reader, EPD_inverse);
+  ereader.EPD->frame_cb(0, SD_reader, EPD_inverse);
   reset_wif();
-  ereader.EPD.frame_cb(0, SD_reader, EPD_normal);
-  ereader.EPD.end();   // power down the EPD panel
+  ereader.EPD->frame_cb(0, SD_reader, EPD_normal);
+  //ereader.EPD->end();   // power down the EPD panel
   
 }
 
@@ -328,11 +328,11 @@ void erase_img(File imgFile){
 
   //*** maybe need to ensure clock is ok for EPD
 
-  ereader.EPD.begin(); // power up the EPD panel
+  ereader.EPD->begin(); // power up the EPD panel
   reset_wif();
-  ereader.EPD.frame_cb(0, SD_reader, EPD_compensate);
+  ereader.EPD->frame_cb(0, SD_reader, EPD_compensate);
   reset_wif();
-  ereader.EPD.frame_cb(0, SD_reader, EPD_white);
+  ereader.EPD->frame_cb(0, SD_reader, EPD_white);
 }
 
 void reset_wif(){
@@ -373,7 +373,7 @@ void SD_reader(void *buffer, uint32_t address, uint16_t length){
 void goToSleep(){ 
   digitalWrite(LED_PIN, LOW);
 //  ereader.spi_detach();
-  // ereader.EPD.end();   // make sure EPD panel is off
+  // ereader.EPD->end();   // make sure EPD panel is off
   delay(500);
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
