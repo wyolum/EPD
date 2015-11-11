@@ -104,8 +104,10 @@ char *get_cwd_path(){
   path[n] = 'A' + current_dir;
   path[n+1] = '/';
   path[n+2] = 0;
-  // Serial.print("get_cwd_path path:");
-  // Serial.println(path);
+  #ifdef DEBUG
+  Serial.print("get_cwd_path path:");
+  Serial.println(path);
+  #endif
 }
 
 /*
@@ -117,8 +119,10 @@ void *get_wif_path(){
 
   path[n] = 'A' + current_wif;
   path[n + 1] = 0;
-  // Serial.print("get_wif_path path:");
-  // Serial.println(path);
+  #ifdef DEBUG
+  Serial.print("get_wif_path path:");
+  Serial.println(path);
+  #endif
 
   strcat(path, ".WIF");
   if(!SD.exists(path)){
@@ -150,7 +154,9 @@ int count_wifs(File dir){
   if(dir.isDirectory()){
     dir.rewindDirectory();
     while(f = dir.openNextFile()){
-      // Serial.println(f.name());
+      #ifdef DEBUG
+      Serial.println(f.name());
+      #endif
       if(isWIF(f)){
 	out++;
       }
@@ -160,20 +166,18 @@ int count_wifs(File dir){
   return out;
 }
 
-// I/O setup
-const int UP_PIN = 17;
-const int DOWN_PIN = 15;
-const int SEL_PIN = 16;
-const int MODE_PIN = A6;
+//#define DEBUG true
 
 void setup() {
   int n = strlen(ROOT_DIR);
   bool done = false;
 
- /* Serial.begin(115200);
+#ifdef DEBUG
+  Serial.begin(115200);
   Serial.println("WyoLum, LLC 2013");
   Serial.println("Buy Open Source Hardware!");
-  */
+#endif
+ 
   ereader.setup(EPD_2_7); // starts SD
   pinMode(UP_PIN, INPUT);
   pinMode(DOWN_PIN, INPUT);
@@ -181,9 +185,10 @@ void setup() {
   pinMode(MODE_PIN, INPUT);
   root = SD.open(ROOT_DIR);
   if(!root){
- /*   Serial.print("Root not found:\n    ");
+    #ifdef DEBUG
+    Serial.print("Root not found:\n    ");
     Serial.println(ROOT_DIR);
-    */
+    #endif
     while(1) delay(100);
   }
   get_cwd_path();
@@ -270,12 +275,12 @@ void goToSleep(){
 }
 
 void draw_img(File imgFile){
-  /*
+  #ifdef DEBUG
     int temperature = S5813A.read();
     Serial.print("Temperature = ");
     Serial.print(temperature);
     Serial.println(" Celcius");
-  */
+  #endif
 
   //*** maybe need to ensure clock is ok for EPD
   set_spi_for_epd();
@@ -313,9 +318,11 @@ void SD_reader(void *buffer, uint32_t address, uint16_t length){
 
   // compensate for long/short files widths
   my_address = (address * my_width) / ereader.epd_width;
-  // Serial.print(wif.name());
-  // Serial.print(" my width: ");
-  // Serial.println(my_width);
+  #ifdef DEBUG
+  Serial.print(wif.name());
+  Serial.print(" my width: ");
+  Serial.println(my_width);
+  #endif
   if((my_address * 8 / my_width) < my_height){
     wif.seek(my_address + 4);
     for(int i=0; i < length && i < my_width / 8; i++){
