@@ -13,16 +13,15 @@
 // governing permissions and limitations under the License.
 
 #include <inttypes.h>
+#include <avr/interrupt.h>
 #include <ctype.h>
-
-#include <SPI.h>
-#include <SD.h>
-#include "EPD.h"
-#include "S5813A.h"
-#include "EReader.h"
 #include <avr/sleep.h> //Needed for sleep_mode
 #include <avr/power.h> //Needed for powering down perihperals such as the ADC/TWI and Timers
 
+#include <SPI.h>
+#include <SD.h>
+#include "EPD_V2.h"
+#include "EReader.h"
 
 // globals
 
@@ -44,9 +43,14 @@ File wif;
 bool update = false;
 unsigned short my_width;
 unsigned short my_height;
+
 // these are involved in determining when we go to sleep
+// after a certain number of milliseconds with no button presses go to sleep.
+// if a button is pressed, it resets the timer.
 long lastWakeTime; //reset with every interaction
-#define AWAKETIME 30000 // how long to stay awake
+#define AWAKETIME 60000 // how long to stay awake
+#define FOCUSTIME 15000 // how long to stay awake
+
 
 /*
   increment image number by one
@@ -67,6 +71,7 @@ void prev_wif(){
 }
 
 void open_cwd(){
+  SD.begin(SD_CS); // hack to wake SD up after detach.  returns false but seems to work.
   get_cwd_path(); // copy current dir path to path
   cwd.close();
   cwd = SD.open(path);
@@ -77,9 +82,9 @@ void next_dir(){
   current_dir++;
   current_dir %= n_dir;
   open_cwd();
-  if(current_wif > n_wif - 1){
-    current_wif = 0;
-  }
+  // if(current_wif > n_wif - 1){
+  current_wif = 0;
+  //}
 }
 void prev_dir(){
   current_dir--;
@@ -87,9 +92,9 @@ void prev_dir(){
     current_dir = n_dir - 1;
   }
   open_cwd();
-  if(current_wif > n_wif - 1){
-    current_wif = 0;
-  }
+  //if(current_wif > n_wif - 1){
+  current_wif = 0;
+  //}
 }
 
 /*
@@ -166,29 +171,44 @@ int count_wifs(File dir){
   return out;
 }
 
+<<<<<<< HEAD
 //#define DEBUG true
 
+=======
+>>>>>>> f42766ee7b0557ac29d7005056975dcfd74d5bc2
 void setup() {
   int n = strlen(ROOT_DIR);
   bool done = false;
 
+<<<<<<< HEAD
 #ifdef DEBUG
   Serial.begin(115200);
   Serial.println("WyoLum, LLC 2013");
   Serial.println("Buy Open Source Hardware!");
 #endif
  
+=======
+  Serial.begin(115200);
+  Serial.println("WyoLum, LLC 2013");
+  Serial.println("Buy Open Source Hardware!");
+>>>>>>> f42766ee7b0557ac29d7005056975dcfd74d5bc2
   ereader.setup(EPD_2_7); // starts SD
   pinMode(UP_PIN, INPUT);
   pinMode(DOWN_PIN, INPUT);
   pinMode(SEL_PIN, INPUT);
   pinMode(MODE_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
   root = SD.open(ROOT_DIR);
   if(!root){
+<<<<<<< HEAD
     #ifdef DEBUG
     Serial.print("Root not found:\n    ");
     Serial.println(ROOT_DIR);
     #endif
+=======
+    Serial.print("Root not found:\n    ");
+    Serial.println(ROOT_DIR);
+>>>>>>> f42766ee7b0557ac29d7005056975dcfd74d5bc2
     while(1) delay(100);
   }
   get_cwd_path();
@@ -209,69 +229,108 @@ void setup() {
   current_dir = -1;
   next_dir();
   display();
-  lastWakeTime = millis();
+  for(int ii=0; ii < 3; ii++){
+    digitalWrite(LED_PIN, HIGH);
+    delay(100);
+    digitalWrite(LED_PIN, LOW);
+    delay(100);
+  }
+
 }
 
 
+void ser_interact(){
+  char c;
+  update = false;
+  if(Serial.available()){
+    while(Serial.available()){
+      c = Serial.read();
+      if(c == 'n'){
+	next_wif();
+	update = true;
+      }
+      if(c == 'N'){
+	next_dir();
+	update = true;
+      }
+      if(c == 'p'){
+	prev_wif();
+	update = true;
+      }
+      if(c == 'P'){
+	prev_dir();
+	update = true;
+      }
+    }
+    display();
+  }
+}
 
 void display(){
+  ereader.spi_attach();  
   erase_img(wif); // wif is still the old file
   wif.close();    // keep close and open calls in the same spot
   get_wif_path(); // store new wif name in path
   wif = SD.open(path); 
   draw_img(wif); // draw new wif
+  uint16_t start = millis();
+  // ereader.spi_detach(); // this call takes .8 seconds to execute!
+  Serial.println(millis() - start);
+  for(int ii=0; ii<4; ii++){
+    digitalWrite(LED_PIN, ii % 2 == 0 );
+    if(ii < 3){
+      delay(50);
+    }
+  }
 }
 
 // main loop
 unsigned long int loop_count = 0;
 void loop() {
+  bool update_needed = false;
+  if(millis() % 2000 < 50){
+    digitalWrite(LED_PIN, HIGH);
+  }
+  else{
+    digitalWrite(LED_PIN, LOW);
+  }
   long current = millis();
-  if ((current - lastWakeTime) > AWAKETIME)
-     goToSleep();
+  if ((current - lastWakeTime) > FOCUSTIME){
+    ereader.spi_detach(); // this call takes .8 seconds to execute!
+  }
+  else if ((current - lastWakeTime) > AWAKETIME){
+ //   Serial.println("should sleep");
+    goToSleep();
+  }
+  
+
+  ser_interact();
   if(analogRead(MODE_PIN) > 512){
-    lastWakeTime = current;
+//    Serial.println("Mode");
     prev_wif();
-    display();
+    update_needed = true;
   }
   if(digitalRead(SEL_PIN)){
-    lastWakeTime = current;
+//    Serial.println("Sel");
     next_wif();
-    display();
+    update_needed = true;
   }
   if(digitalRead(UP_PIN)){
-    lastWakeTime = current;
+//    Serial.println("Up");
     prev_dir();
-    display();
+    update_needed = true;
   }
   if(digitalRead(DOWN_PIN)){
-    lastWakeTime = current;
+//     Serial.println("down");
     next_dir();
+    update_needed = true;
+  }
+  if(update_needed){
+    lastWakeTime = current;
     display();
   }
-  delay(10);
-}
-
-void goToSleep(){
-  ereader.EPD.end();   // make sure EPD panel is off
-  
-  set_sleep_mode(SLEEP_MODE_PWR_SAVE);
-  sleep_enable();
-
-  //Shut off ADC, TWI, SPI, Timer0, Timer1
-
-  ADCSRA &= ~(1<<ADEN); //Disable ADC
-  ACSR = (1<<ACD); //Disable the analog comparator
-  DIDR0 = 0x3F; //Disable digital input buffers on all ADC0-ADC5 pins
-  DIDR1 = (1<<AIN1D)|(1<<AIN0D); //Disable digital input buffer on AIN1/0
-  
-  power_twi_disable();
-  power_spi_disable();
-  power_usart0_disable();
-  power_timer0_disable(); //Needed for delay_ms
-  power_timer1_disable();
-  power_timer2_disable(); 
-  sleep_mode();
-
+  else{
+  }
 }
 
 void draw_img(File imgFile){
@@ -283,26 +342,24 @@ void draw_img(File imgFile){
   #endif
 
   //*** maybe need to ensure clock is ok for EPD
-  set_spi_for_epd();
 
   reset_wif();
-  ereader.EPD.frame_cb(0, SD_reader, EPD_inverse);
+  ereader.EPD->frame_cb(0, SD_reader, EPD_inverse);
   reset_wif();
-  ereader.EPD.frame_cb(0, SD_reader, EPD_normal);
-  ereader.EPD.end();   // power down the EPD panel
+  ereader.EPD->frame_cb(0, SD_reader, EPD_normal);
+  //ereader.EPD->end();   // power down the EPD panel
   
 }
 
 void erase_img(File imgFile){
 
   //*** maybe need to ensure clock is ok for EPD
-  set_spi_for_epd();
 
-  ereader.EPD.begin(); // power up the EPD panel
+  ereader.EPD->begin(); // power up the EPD panel
   reset_wif();
-  ereader.EPD.frame_cb(0, SD_reader, EPD_compensate);
+  ereader.EPD->frame_cb(0, SD_reader, EPD_compensate);
   reset_wif();
-  ereader.EPD.frame_cb(0, SD_reader, EPD_white);
+  ereader.EPD->frame_cb(0, SD_reader, EPD_white);
 }
 
 void reset_wif(){
@@ -342,9 +399,52 @@ void SD_reader(void *buffer, uint32_t address, uint16_t length){
   //*** file operations above may have changed SPI mode
 }
 
-//***  ensure clock is ok for EPD
-void set_spi_for_epd() {
-	SPI.setBitOrder(MSBFIRST);
-	SPI.setDataMode(SPI_MODE0);
-	SPI.setClockDivider(SPI_CLOCK_DIV4);
+void goToSleep(){ 
+  digitalWrite(LED_PIN, LOW);
+//  ereader.spi_detach();
+  // ereader.EPD->end();   // make sure EPD panel is off
+  delay(500);
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  sleep_enable();
+  attachInterrupt(0,wake,RISING); // pin 2 intterupt UP button on V3 
+  attachInterrupt(1,wake,RISING);// pin 3 interrupt  SEL button on V3
+
+ #ifndef COMPLICATED
+ //Shut off ADC, TWI, SPI, Timer0, Timer1
+ // ADCSRA &= ~(1<<ADEN); //Disable ADC
+ // ACSR = (1<<ACD); //Disable the analog comparator
+ // DIDR0 = 0x3F; //Disable digital input buffers on all ADC0-ADC5 pins
+ // DIDR1 = (1<<AIN1D)|(1<<AIN0D); //Disable digital input buffer on AIN1/0
+  
+  power_twi_disable();
+//  power_spi_disable();
+  power_usart0_disable();
+//  power_timer0_disable(); //Needed for delay_ms and apparently for pin interrupts
+  power_timer1_disable();
+  power_timer2_disable(); 
+ #endif
+  sleep_mode(); // this immediately goes to sleep
+  // and when we wake up, we will execute this
+  detachInterrupt(0);// we don't want to keep getting interrupted when waking
+  detachInterrupt(1);
+
+  sleep_disable();
+  power_twi_enable();
+//  power_spi_enable();
+  power_usart0_enable();
+//  power_timer0_enable(); //Needed for delay_ms
+  power_timer1_enable();
+  power_timer2_enable(); 
+
+  //Serial.println("returning from sleep");
+  lastWakeTime = millis();
+
+
 }
+void wake()
+{
+  // apparently the uart takes a while to reconfigure on waking up
+   Serial.begin(115200);
+  delay(100); // crude debounce
+}
+

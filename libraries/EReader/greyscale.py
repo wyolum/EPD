@@ -47,7 +47,7 @@ def towif(im, outfn):
     ''' 
     image should be sized already (2.7" display=264x276 pixels) in "1" format
     '''
-    f = open(outfn, 'w')
+    f = open(outfn, 'wb')
     f.write(struct.pack('HH', H, W))
     for j in range(H):
         for i in range(0, W, 8):

@@ -32,7 +32,7 @@ class WIF:
         self.im.paste(img, box)
 
     def addUnifont(self, txt, x, y, **kw):
-        unifont.addText(txt, self.wff_file, self.im, x, y, **kw)
+        unifont.addText(txt, self.im, x, y, wff_file=self.wff_file, **kw)
 
     def add_7x5_txt(self, txt, x, y, **kw):
         ascii_5x7.addText(txt, self.im, x, y, **kw)
@@ -48,6 +48,7 @@ class WIF:
             ttf = '%s%s-%s.ttf' % (FONT_DIR, font, font_style)
         else:
             ttf = '%s%s.ttf' % (FONT_DIR, font)
+        print ttf
         font = ImageFont.truetype(ttf, font_size)
         text_size = self.draw.textsize(txt, font)
         if text_size[0] > WIDTH:
@@ -74,7 +75,7 @@ class WIF:
         self.draw.text((x, y), txt, color, font=font)
     
     def addBreadCrumb(self, x, y, row, col, shape, color=BLACK):
-        startx = WIDTH - max(shape) * BREADCRUMB_SIZE
+        startx = WIDTH - (max(shape) + 1) * BREADCRUMB_SIZE
         starty = HEIGHT - len(shape) * BREADCRUMB_SIZE
         for i, n_col in enumerate(shape):
             for j in range(n_col):
@@ -104,7 +105,10 @@ class WIF:
         self.im.show()
     
     def saveas(self, fn):
-        towif(self.im, fn, WIDTH, HEIGHT)
+        if fn.upper().endswith('WIF'):
+            towif(self.im, fn, WIDTH, HEIGHT)
+        else:
+            self.im.save(fn)
         print 'wrote', fn
 
     def rotate180(self):
@@ -114,7 +118,7 @@ def towif(im, outfn, width, height):
     ''' 
     image should be sized already (2.7" display=264x276 pixels) in "1" format
     '''
-    f = open(outfn, 'w')
+    f = open(outfn, 'wb')
     f.write(struct.pack('HH', height, width))
     for j in range(height):
         for i in range(0, width, 8):

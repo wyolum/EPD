@@ -1,5 +1,5 @@
-ID,         Name, Company,            email,    website,        phone, Sponsor, Speaker, headshot, logo
- 1,Justin Shaw, WyoLum, justin@wyolum.com, wyolum.com, 703-217-1513,     Yes,     Yes, justin.png, wyolum.png
- 2,Kevin Osborn, WyoLum, justin@wyolum.com, wyolum.com, 617-947-5922,     Yes,     Yes, kevin.png, wyolum.png
- 3,Anool Mahidharia, WyoLum, anool@wyolum.com, wyolum.com, +91-9870263211,     Yes,     Yes, anool.png, wyolum.png
- 4,Marge N. Overa, Polls-R-US, marge@poles.com, poles.com, 703-555-1212,     No,     No, default.png, default.png
+ID,         Name, Company,            email,    website,        phone, Organizer, Sponsor, Speaker, headshot, logo
+ 1,Justin Shaw, WyoLum, justin@wyolum.com, wyolum.com, 703-217-1513,     No, Yes,     Yes, justin.png, wyolum.png
+ 2,Kevin Osborn, WyoLum, justin@wyolum.com, wyolum.com, 617-947-5922,     No, Yes,     Yes, kevin.png, wyolum.png
+ 3,Anool Mahidharia, WyoLum, anool@wyolum.com, wyolum.com, +91-9870263211,     No, Yes,     Yes, anool.png, wyolum.png
+ 4,Marge N. Overa, Polls-R-US, marge@poles.com, poles.com, 703-555-1212,     Yes, No,     No, default.png, default.png

@@ -15,7 +15,7 @@
 #ifndef EREADER_H
 #define EREADER_H
 #include <inttypes.h>
-#include "EPD.h"
+#include "EPD_V2.h"
 #include "SD.h"
 
 // set HW_VERSION to 0 when following EPD schematic
@@ -50,6 +50,14 @@ const uint8_t UNIFONT_RECLEN = 33;
 // const int SD_CS = 10; // delete me!
 const int SD_CS = 9; // production
 
+const bool BLACK = true;
+const bool WHITE = false;
+const uint16_t BIGTEXT_OFFSET = 0xfee0;
+
+// error codes
+const uint8_t SD_ERROR_CODE = 0;
+const uint8_t FILE_NOT_FOUND_CODE = 1;
+
 const float MCP9700_C0 = 155.15151515;   // 500 mV measured with 3v3 reference at 0 DEG C with 10 bits
 const float MCP9700_GAIN = 3.103030303; // 10 mV / DEG C measured with 3v3 ref
 // C = C0 + GAIN * Temp
@@ -62,19 +70,21 @@ class EReader{
   // clear screen
   void _erase();
   void _draw();
-
  public:
-  EPD_Class EPD;
+  bool attached; // true if spi display is ready, false if "detached"
+  bool initialized;
   File display_file;
   File unifont_file;
   uint16_t epd_height;
   uint16_t epd_width;
   uint16_t epd_bytes;
   uint8_t unifont_data[UNIFONT_RECLEN - 1];
-
+  EPD_Class *EPD;
   // constructor
   EReader();
 
+
+  void error(int code_num);
   void spi_attach(); /** PDi added on 21 June*/
   void spi_detach(); /** PDi added on 21 June*/
 
@@ -101,6 +111,9 @@ class EReader{
 
   // display a line from start to stop in specified color: true=black, false=white
   void draw_line(int16_t startx, int16_t starty, int16_t stopx, int16_t stopy, bool color);
+
+  // display a vertical from start to stop in specified color: true=black, false=white thickness pixels thick
+  void draw_vline(int16_t x, int16_t starty, int16_t stopy, bool color, uint8_t thickness);
   
   // draw an ellipse centered at cx, cy with horizontal radius rx and vertical radius ry
   // toggle each pix on ellipse
@@ -126,7 +139,20 @@ class EReader{
   void set_spi_for_epd();
   
   uint16_t put_char(uint16_t x, uint16_t y, uint16_t unic, bool color);
+
+/*
+  put ASCII string at location x, y
+ */
   uint16_t put_ascii(uint16_t x, uint16_t y, char * ascii, bool color);
+
+/*
+  put ASCII string at location x, y
+ */
+  uint16_t put_bigascii(uint16_t x, uint16_t y, char * ascii, bool color);
+
+/*
+  put unicode string at location x, y
+ */
   uint16_t put_unicode(uint16_t x, uint16_t y, uint16_t * unic, bool color);
   // used to pass to EPD 
   void SD_image_dims(File imgFile, unsigned short *h, unsigned short *w);

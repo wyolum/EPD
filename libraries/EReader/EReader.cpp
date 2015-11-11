@@ -13,19 +13,48 @@
 // governing permissions and limitations under the License.
 
 #include "EReader.h"
-#include "EPD.h"
+#include "EPD_v2.h"
 #include "S5813A.h"
 
 EReader::EReader(){
+  initialized = false;
+  attached = false;
 }
 
 void EReader::reader(void *buffer, uint32_t address, uint16_t length){
   byte *my_buffer = (byte *)buffer;
   uint32_t offset = pingpong * epd_bytes;
 
-  display_file.seek(offset + address);
+  SPI.setClockDivider(SPI_CLOCK_DIV2);
+
+  display_file.seek(offset + address); // TODO: don't set address each time for sequential reads?
   for(uint16_t i=0; i < length; i++){
     my_buffer[i] = display_file.read();
+  }
+  SPI.setClockDivider(SPI_CLOCK_DIV4);
+}
+
+void EReader::error(int code_num){
+  char *error_msg = "ERROR_CODE: ";
+
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  Serial.print(error_msg);
+  Serial.println(code_num);
+  ereader.put_ascii(0, 0, error_msg, BLACK);
+  ereader.put_char(0, 16, '0' + code_num, BLACK);
+  if(initialized){
+    ereader.show();
+  }
+  ereader.spi_detach();
+  while(1){
+    for(int i=0; i < code_num + 3; i++){
+      digitalWrite(LED_PIN, HIGH);
+      delay(100);
+      digitalWrite(LED_PIN, LOW);
+      delay(100);
+    }
+    delay(1000);
   }
 }
 
@@ -33,30 +62,37 @@ void EReader::reader(void *buffer, uint32_t address, uint16_t length){
  * \brief Configure SPI and initialization
  */
 void EReader::spi_attach(){	
-  SPI.begin();
-  pinMode(SCK, OUTPUT);
-  pinMode(MOSI, OUTPUT);	
-  pinMode(MISO, INPUT);
-  set_spi_for_epd();
-  EPD.begin(); // power up the EPD panel	
+  if(!attached){
+    SPI.begin();
+    pinMode(SCK, OUTPUT);
+    pinMode(MOSI, OUTPUT);	
+    pinMode(MISO, INPUT);
+    set_spi_for_epd();
+    EPD->begin(); // power up the EPD panel	
+    attached = true;
+  }
 }
 
 /**
  * \brief Disable SPI, change to GPIO and set LOW
  */
 void EReader::spi_detach(){
-  EPD.end();
-  SPI.end();
-  pinMode(SCK, OUTPUT);
-  pinMode(MOSI, OUTPUT);
-  pinMode(MISO, OUTPUT);
-  digitalWrite(SCK, LOW);
-  digitalWrite(MOSI, LOW);
-  digitalWrite(MISO, LOW);
+  if(attached){
+    EPD->end();
+    SPI.end();
+    pinMode(SCK, OUTPUT);
+    pinMode(MOSI, OUTPUT);
+    pinMode(MISO, OUTPUT);
+    digitalWrite(SCK, LOW);
+    digitalWrite(MOSI, LOW);
+    digitalWrite(MISO, LOW);
+    attached = false;
+  }
 }
 
 // call in arduino setup function
 void EReader::setup(EPD_size size){
+  attached = false;
   pinMode(SD_CS, OUTPUT);
   if (!SD.begin(SD_CS)) {
     Serial.println("SD initialization failed!!");
@@ -66,6 +102,7 @@ void EReader::setup(EPD_size size){
     // while(1); delay(100);
   }
 
+  EPD = new EPD_Class(size, EPD_PANEL_ON, EPD_BORDER, EPD_DISCHARGE, EPD_RESET, EPD_BUSY, EPD_EPD_CS);
 
   if(size == EPD_1_44){
     epd_width = 128L;
@@ -81,7 +118,7 @@ void EReader::setup(EPD_size size){
   }
   epd_bytes = (epd_width * epd_height / 8);
 
-  EPD.setup(size, EPD_PANEL_ON, EPD_BORDER, EPD_DISCHARGE, EPD_PWM, EPD_RESET, EPD_BUSY, EPD_EPD_CS);
+
   pinMode(EPD_PWM, OUTPUT);
   pinMode(EPD_BUSY, INPUT);
   pinMode(EPD_RESET, OUTPUT);
@@ -105,12 +142,12 @@ void EReader::setup(EPD_size size){
   display_file = SD.open("__EPD__.DSP", FILE_WRITE);
   if(!display_file){
     Serial.println("Could not open file: __EPD__.DSP");
-    // while(1) delay(100);
+    error(FILE_NOT_FOUND_CODE);
   }    
   unifont_file = SD.open("unifont.wff");
   if(!unifont_file){
     Serial.println("Could not open file: unifont.wff");
-    // while(1) delay(100);
+    error(FILE_NOT_FOUND_CODE);
   }    
 
 
@@ -119,6 +156,7 @@ void EReader::setup(EPD_size size){
   clear();
   pingpong = true;
   clear();
+  initialized = true;
 }
 
 // clear the display
@@ -201,6 +239,7 @@ void EReader::togglepix(uint16_t x, uint16_t y){
   }
 }
 
+
 // set a pixel to a value
 void EReader::setpix(uint16_t x, uint16_t y, bool val){
   // toggle pixel located at x, y
@@ -257,6 +296,17 @@ void EReader::draw_line(int16_t startx, int16_t starty, int16_t stopx, int16_t s
     }
     lastx = x;
     lasty = y;
+  }
+}
+  
+// display a line from start to stop in specified color: true=black, false=white
+void EReader::draw_vline(int16_t x, int16_t starty, int16_t stopy, bool color, uint8_t thickness){
+  float dy = (stopy - starty);
+
+  for(int16_t y = starty; y < stopy; y++){
+    for(int16_t i = 0; i < thickness; i++){
+      setpix(x + i, y, color);
+    }
   }
 }
   
@@ -476,14 +526,14 @@ void EReader::_erase(){
   //*** maybe need to ensure clock is ok for EPD
   set_spi_for_epd();
 
-  EPD.begin(); // power up the EPD panel
+  EPD->begin(); // power up the EPD panel
 #ifdef SLOW
-  EPD.setFactor(temperature); // adjust for current temperature
-  EPD.frame_cb_repeat(0, reader_wrap, EPD_compensate);
-  EPD.frame_cb_repeat(0, reader_wrap, EPD_white);  
+  EPD->setFactor(temperature); // adjust for current temperature
+  EPD->frame_cb_repeat(0, reader_wrap, EPD_compensate);
+  EPD->frame_cb_repeat(0, reader_wrap, EPD_white);  
 #else
-  EPD.frame_cb(0, reader_wrap, EPD_compensate);
-  EPD.frame_cb(0, reader_wrap, EPD_white);  
+  EPD->frame_cb(0, reader_wrap, EPD_compensate);
+  EPD->frame_cb(0, reader_wrap, EPD_white);  
 #endif
 }
 
@@ -492,13 +542,13 @@ void EReader::_draw(){
   set_spi_for_epd();
 
 #ifdef SLOW
-  EPD.frame_cb_repeat(0, reader_wrap, EPD_inverse);
-  EPD.frame_cb_repeat(0, reader_wrap, EPD_normal);
+  EPD->frame_cb_repeat(0, reader_wrap, EPD_inverse);
+  EPD->frame_cb_repeat(0, reader_wrap, EPD_normal);
 #else
-  EPD.frame_cb(0, reader_wrap, EPD_inverse);
-  EPD.frame_cb(0, reader_wrap, EPD_normal);
+  EPD->frame_cb(0, reader_wrap, EPD_inverse);
+  EPD->frame_cb(0, reader_wrap, EPD_normal);
 #endif
-  // EPD.end();   // power down the EPD panel
+  // EPD->end();   // power down the EPD panel
 }
 
 uint16_t EReader::put_char(uint16_t x, uint16_t y, uint16_t unic, bool color){
@@ -547,11 +597,22 @@ bool EReader::char_is_blank(uint32_t unic){
   }
   return out;
 }
-
+/*
+  put ASCII string at location x, y
+ */
 uint16_t EReader::put_ascii(uint16_t x, uint16_t y, char * ascii, bool color){
-  char c = 'A';
   for(uint8_t i = 0; ascii[i] > 0; i++){
     x += put_char(x, y, ascii[i], color);
+  }
+  return x;
+}
+
+/*
+  put ASCII string in 16x16 font at location x, y
+ */
+uint16_t EReader::put_bigascii(uint16_t x, uint16_t y, char *ascii, bool color){
+  for(uint8_t i = 0; ascii[i] > 0; i++){
+    x += put_char(x, y, (uint16_t)ascii[i] + BIGTEXT_OFFSET, color);
   }
   return x;
 }

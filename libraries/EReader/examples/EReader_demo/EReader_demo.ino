@@ -101,6 +101,7 @@ void loop() {
     ereader.display_wif("/IMAGES/APHRODIT.WIF", 0, 0);
     ereader.toggle_ellipse(random(0, 264), random(0, 176), 20, 20, false);
     ereader.put_ascii(random(0, 200), random(16, 150), "WyoLum ROCKS!!", true);
+    ereader.put_bigascii(random(0, 200), random(16, 16), "WyoLum ROCKS!!", true);
     for(uint8_t yy=0; yy < 6; yy++){
       ereader.setpix(128, yy, true); // draw some pixels
     }

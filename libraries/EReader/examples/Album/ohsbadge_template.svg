@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="264"
+   height="176"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="ohsbadge_template.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.3985383"
+     inkscape:cx="142.64601"
+     inkscape:cy="87.275691"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1600"
+     inkscape:window-height="876"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-876.36218)">
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.81213099;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2985"
+       width="263.18784"
+       height="49.18787"
+       x="0.40606555"
+       y="1002.7682" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.98077351;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2985-8"
+       width="151.01923"
+       height="125.01923"
+       x="112.49039"
+       y="876.85254" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Symbol;-inkscape-font-specification:Symbol"
+       x="110.48396"
+       y="1031.0992"
+       id="text3773"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3775"
+         x="110.48396"
+         y="1031.0992">NAME 264x48</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Symbol;-inkscape-font-specification:Symbol"
+       x="178.44202"
+       y="56.343792"
+       id="text3777"
+       sodipodi:linespacing="125%"
+       transform="translate(0,876.36218)"><tspan
+         sodipodi:role="line"
+         id="tspan3779"
+         x="178.44202"
+         y="56.343792">IMAGE</tspan><tspan
+         sodipodi:role="line"
+         x="178.44202"
+         y="71.343796"
+         id="tspan3781">152x128</tspan></text>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.98297322;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3783"
+       width="111.01703"
+       height="125.01704"
+       x="0.49148661"
+       y="876.85364" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Symbol;-inkscape-font-specification:Symbol"
+       x="36.272091"
+       y="54.25919"
+       id="text3785"
+       sodipodi:linespacing="125%"
+       transform="translate(0,876.36218)"><tspan
+         sodipodi:role="line"
+         id="tspan3787"
+         x="36.272091"
+         y="54.25919">ROLES</tspan><tspan
+         sodipodi:role="line"
+         x="36.272091"
+         y="69.259186"
+         id="tspan3791">112x128</tspan><tspan
+         sodipodi:role="line"
+         x="36.272091"
+         y="84.593163"
+         id="tspan3789" /></text>
+  </g>
+</svg>
