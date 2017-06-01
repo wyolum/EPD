@@ -13,7 +13,7 @@
 // governing permissions and limitations under the License.
 
 #include "EReader.h"
-#include "EPD_v2.h"
+#include "EPD_V2.h"
 #include "S5813A.h"
 
 EReader::EReader(){
