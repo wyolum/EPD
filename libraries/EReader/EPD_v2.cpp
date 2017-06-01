@@ -338,7 +338,8 @@ void EPD_Class::power_off(void) {
 	digitalWrite(this->EPD_Pin_BORDER, LOW);
 
 	// ensure SPI MOSI and CLOCK are Low before CS Low
-	SPI_off();
+	SPI_put(0x00);
+	//	SPI_off();// this alone causes fading
 	digitalWrite(this->EPD_Pin_EPD_CS, LOW);
 
 	// pulse discharge pin
