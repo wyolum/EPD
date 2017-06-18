@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import PIL.Image as Im
 from numpy import *
 import struct

@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import os.path
 import struct
 # from PIL import Image 

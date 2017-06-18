@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import PIL
 from PIL import ImageFont
 from PIL import Image

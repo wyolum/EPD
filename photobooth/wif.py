@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import PIL.Image as Image
 from PIL import ImageFont
 import PIL.ImageDraw as ImageDraw
